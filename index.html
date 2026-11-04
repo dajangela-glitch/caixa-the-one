@@ -785,7 +785,7 @@ async function ligar(h){
   await dbSet('lastMod',f.lastModified);render();
 }
 function falha(e){
-  const m=e&&e.name==='NotReadableError'?'O Excel está salvando o arquivo. Tente de novo em alguns segundos.':(e&&e.message)||'Não consegui ler esse arquivo.';
+  const m=e&&(e.name==='NotAllowedError'||e.name==='SecurityError')?'Este navegador não permite ligar o arquivo. Use Anexar a planilha.':e&&e.name==='NotReadableError'?'O Excel está salvando o arquivo. Tente de novo em alguns segundos.':(e&&e.message)||'Não consegui ler esse arquivo.';
   toast(m,9000);
 }
 async function checar(){
@@ -820,7 +820,7 @@ addEventListener('drop',async e=>{
   if(!/\.xls[xm]$/i.test(f.name)){toast('Use um arquivo .xlsx do Excel.');return}
   try{
     const h=ph?await ph:null;
-    if(h&&h.kind==='file')await ligar(h);
+    if(h&&h.kind==='file'){try{await ligar(h)}catch(x){if(x&&(x.name==='NotAllowedError'||x.name==='SecurityError'))await importar(await f.arrayBuffer(),f.name,f.lastModified);else throw x}}
     else{await importar(await f.arrayBuffer(),f.name,f.lastModified)}
   }catch(x){falha(x)}
 });
@@ -921,22 +921,34 @@ function render(){
   if(ui.aba==='relatorios')desenhaRel();
   if(ui.aba==='areas')desenhaAreaItens();
 }
-function telaBoasVindas(){return `<div class="boas">
+function telaBoasVindas(){
+  if(souLeitor())return `<div class="boas"><h1>Caixa The One</h1><p style="font-size:18px;color:var(--tinta2);margin:0">Os dados ainda não foram carregados. Assim que a administradora ligar a planilha, eles aparecem aqui sozinhos.</p><p class="nota"><button class="link" data-a="sair">Sair</button></p></div>`;
+  if(emNuvem())return `<div class="boas">
+  <h1>Caixa The One</h1>
+  <p style="font-size:18px;color:var(--tinta2);margin:0">Anexe a planilha para ver os dados. Para atualizar depois, é só anexar a versão nova.</p>
+  <div class="solta">
+    <button class="btn forte" data-a="anexar">Anexar a planilha</button>
+    <p style="margin:14px 0 0;color:var(--tinta2)">Escolha o arquivo <b>Fluxo de recebimento</b> em .xlsx, ou arraste para esta janela</p><p class="nota"><button class="link" data-a="escolher">Ligar a um arquivo sincronizado para atualizar sozinho</button></p>
+  </div>
+  <p class="nota">Os dados da planilha são guardados no banco online do app, com acesso só para quem você liberar. <button class="link" data-a="sair">Sair</button></p>
+</div>`;
+  return `<div class="boas">
   <h1>Caixa The One</h1>
   <p style="font-size:18px;color:var(--tinta2);margin:0">Veja, em poucos segundos, quanto tem hoje, o que entra, o que sai e quando vai faltar dinheiro.</p>
   <div class="solta">
-    <button class="btn forte" data-a="escolher">Escolher a planilha</button>
+    <button class="btn forte" data-a="anexar">Anexar a planilha</button>
     <p style="margin:14px 0 0;color:var(--tinta2)">ou arraste o arquivo <b>Fluxo de recebimento</b> para esta janela</p>
   </div>
   <p class="nota">Seus dados ficam só neste computador. Nada é enviado para a internet.</p>
-</div>`}
+</div>`;
+}
 function topo(){
   const b=(k,t)=>`<button class="aba ${ui.aba===k?'on':''}" data-a="aba" data-v="${k}">${t}</button>`;
   return `<header class="topo"><div class="topo-in">
     <div class="marca">Caixa The One</div>
     <nav class="abas">${b('inicio','Início')}${b('semana','Planejamento Semanal')}${b('dia','Fluxo Caixa Diário')}${b('totais','Totais')}${b('datas','Melhores datas')}${b('areas','Despesas por Área')}${b('detalhes','Detalhes')}${b('relatorios','Relatórios')}${souLeitor()?'':b('config','Configuração')}</nav>
     <div class="sync" id="sync"></div>
-    ${souLeitor()?'':'<button class="btn forte" data-a="escolher">Atualizar planilha</button>'}<button class="btn" data-a="sair">Sair</button>
+    ${souLeitor()?'':'<button class="btn forte" data-a="anexar">Anexar planilha</button>'}<button class="btn" data-a="sair">Sair</button>
 
   </div></header>`;
 }
@@ -975,7 +987,7 @@ function telaInicio(){
   const semS=M.semSaldo?`<div class="faixa f-alerta"><div class="ic">!</div><div class="tx"><b>Falta informar o saldo bancario.</b> Sem ele, a conta começa do zero.</div><button class="btn forte" data-a="saldo">Informar saldo bancario</button></div>`:'';
   const dif=M.ultDif&&M.ultDif.d>=H-7?`<div class="faixa f-alerta"><div class="ic">!</div><div class="tx"><b>O saldo bancario difere da planilha em ${R2(M.ultDif.dif)}</b> em ${fData(M.ultDif.d)}. <small>Pode ser lançamento faltando, data diferente ou baixa ainda não registrada.</small></div><button class="btn" data-a="dia" data-v="${M.ultDif.d}">Ver o dia</button></div>`:'';
   const ages=syncIdade();
-  const velho=ages>=2&&!souLeitor()?`<div class="faixa f-alerta"><div class="ic">!</div><div class="tx"><b>A planilha carregada foi salva há ${ages} dias.</b> Baixas feitas depois disso ainda não aparecem aqui.</div><button class="btn" data-a="escolher">Atualizar</button></div>`:'';
+  const velho=ages>=2&&!souLeitor()?`<div class="faixa f-alerta"><div class="ic">!</div><div class="tx"><b>A planilha carregada foi salva há ${ages} dias.</b> Baixas feitas depois disso ainda não aparecem aqui.</div><button class="btn" data-a="anexar">Anexar</button></div>`:'';
   const ag=agrupaAportes();
   const qt=ui.verAportes?ag.length:5;
   const listaAp=ag.length?`<ul class="lista">${ag.slice(0,qt).map(a=>`<li><button class="linha-btn" data-a="dia" data-v="${a.d}"><span class="d">até ${fData(a.d)}</span><span class="v num">${R(a.v)}</span></button></li>`).join('')}</ul>${ag.length>5?`<p class="nota"><button class="link" data-a="verAportes">${ui.verAportes?'Ver menos':`Ver todos (${ag.length} meses)`}</button></p>`:''}`:`<p style="margin:0;color:var(--tinta2)">Sem Aporte necessário.</p>`;
@@ -1933,10 +1945,11 @@ function dlgLanc(){
 /* ---------- ações ---------- */
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
-  if(souLeitor()&&['areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
+  if(souLeitor()&&['anexar','areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
   if(b.tagName==='INPUT')return;
   switch(a){
     case'escolher':escolher();break;
+    case'anexar':$('#arq').click();break;
     case'totPer':ui.totPer=v;render();break;
     case'baixarPDF':baixarPDF();break;
     case'areaInserir':ui.areaAlvo=v;$('#arqArea').click();break;
