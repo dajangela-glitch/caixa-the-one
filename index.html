@@ -256,6 +256,34 @@ table.tot td,table.tot th{font-size:16px;padding:11px 14px}
 .com-barra{height:8px;background:var(--calmo);border-radius:99px;overflow:hidden}.com-barra i{display:block;height:100%;background:var(--entra);border-radius:99px}
 .com-num{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin:0;font-size:14.5px}.com-num dt{color:var(--tinta2)}.com-num dd{margin:0;font-weight:700;text-align:right}
 .com-acoes{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.cc-atraso{border-left-color:#C49A3C;background:#FBF6E8}
+.ms-atr{background:#FBF6E8!important;border-color:#E6D5A4!important}.ms-atr b{color:#7A5A12}
+.cc-pago{border-left-color:#55704F;opacity:.85}
+.com-val{font-weight:700;font-size:17px;white-space:nowrap}
+.com-passo{display:block;white-space:normal;line-height:1.35;padding:7px 11px;border-radius:10px;font-size:14.5px}
+.linha-tempo{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;counter-reset:p}
+.linha-tempo li{position:relative;padding-top:16px;font-size:12.5px;line-height:1.25;color:var(--tinta3)}
+.linha-tempo li::before{content:'';position:absolute;top:2px;left:0;width:11px;height:11px;border-radius:50%;background:var(--calmo);box-shadow:0 0 0 2px var(--folha)}
+.linha-tempo li::after{content:'';position:absolute;top:7px;left:14px;right:4px;height:2px;background:var(--calmo)}
+.linha-tempo li:last-child::after{display:none}
+.linha-tempo li.feito::before{background:#55704F}
+.linha-tempo li b{display:block;color:var(--tinta);font-size:12.5px}
+.pes-lista{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.pes-lista li{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:7px 9px;background:#F3F1EA;border-radius:9px}
+.pes-n{flex:1;min-width:120px}.pes-n b{display:block;font-size:14.5px}.pes-n small{color:var(--tinta3);font-size:13px}
+.pes-v{font-weight:700;white-space:nowrap}
+.com-mais summary{cursor:pointer;color:var(--tinta2);font-size:14px;font-weight:600}
+.com-mais[open] summary{margin-bottom:6px}
+.sem-com-card{margin-bottom:14px}
+.sem-com{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.sem-com>div{background:#F3F1EA;border-radius:10px;padding:10px 12px}
+.sem-com>div.hoje{box-shadow:inset 0 0 0 2px var(--tinta)}
+.sem-com>div.passou{opacity:.6}
+.sem-com span{font-size:13px;color:var(--tinta3);display:block}.sem-com b{display:block;font-size:15px}.sem-com small{display:block;font-size:13.5px;color:var(--tinta2)}
+.dlg-sub{font:700 15px var(--texto);margin:6px 0 8px}
+.pes-ed{border:1px solid var(--linha);border-radius:10px;padding:10px 10px 0;margin-bottom:8px}
+dialog{max-width:620px}
+@media (max-width:700px){.sem-com{grid-template-columns:1fr}.linha-tempo li{font-size:11.5px}}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
 /* Formulários */
 .campo{display:grid;gap:4px;margin-bottom:12px}
@@ -989,87 +1017,138 @@ function navMobile(){
   const sheet=ui.mais?`<div class="fundo" data-a="mais"></div><div class="mais-m" role="menu">${outros.map(([k,t])=>`<button data-a="aba" data-v="${k}" class="${ui.aba===k?'on':''}">${t}</button>`).join('')}${souLeitor()?'':'<button data-a="anexar">Anexar planilha</button><button data-a="saldo">Informar saldo bancario</button>'}<button data-a="sair">Sair</button></div>`:'';
   return `${sheet}<nav class="navm" aria-label="Menu">${b('inicio','Início')}${b('semana','Semana')}${b('dia','Dia a dia')}${b('totais','Totais')}${b('mais','Mais','mais')}</nav>`;
 }
-/* ---------- Comissões: gatilho quando os pagamentos chegam a 10% do valor negociado ---------- */
-const NF_ST=['Aguardando gatilho','Emitir nota fiscal','Nota fiscal recebida','Comissão paga'];
+/* ---------- Comissões: gatilho, e-mail da Unigestão, nota fiscal e pagamento ---------- */
+const PAPEIS=['Imobiliária','Corretor','Vendedor','Gestor','Diretor','House','Outro'];
+const DSEM=['dom','seg','ter','qua','qui','sex','sáb'];
+const dsem=d=>toD(d).getUTCDay();
+const fDia=d=>DSEM[dsem(d)]+' '+fCurta(d);
+const soDig=t=>[...String(t||'')].filter(ch=>ch>='0'&&ch<='9').join('');
+/* a Unigestão manda o e-mail na segunda-feira seguinte ao gatilho */
+const segSeguinte=d=>{let x=d+1;while(dsem(x)!==1)x++;return x};
+/* nota fiscal na segunda: recebe quarta; terça ou quarta: recebe sexta; depois: quarta seguinte */
+const pagamentoPorNF=d=>d+[3,2,3,2,6,5,4][dsem(d)];
 function comissoesCalc(){
   if(!dados)return[];
   const H=M?M.H:hoje(),reg=cfg.comissoes||{},g={};
   for(const r of dados.receb){const k=r.ct||'';if(!k)continue;(g[k]=g[k]||[]).push(r)}
   return Object.entries(g).map(([ct,l])=>{
-    const c=reg[ct]||{},vc=Math.max(0,...l.map(x=>x.vc||0)),pct=c.pct!=null&&c.pct!==''?+c.pct:10,alvo=vc*pct/100;
+    const c=reg[ct]||{},vcPl=Math.max(0,...l.map(x=>x.vc||0)),vc=c.vcFix?+c.vcFix:vcPl,pct=c.pct!=null&&c.pct!==''?+c.pct:10,alvo=vc*pct/100;
     const pagos=l.filter(x=>x.pd!=null).sort((a,b)=>a.pd-b.pd);
     let cum=0,data=null,st=vc>0?'nunca':'semvalor',venc=false;
     for(const x of pagos){cum+=x.pg;if(alvo>0&&cum>=alvo-0.005){data=x.pd;st='ok';break}}
     const pago=pagos.reduce((a,x)=>a+x.pg,0);
-    if(st==='nunca'){let c2=pago;for(const x of l.filter(x=>x.pd==null).sort((a,b)=>a.d-b.d)){if(x.d<H){venc=true;continue}c2+=x.v;if(c2>=alvo-0.005){data=x.d;st=data-H<=7?'breve':'prev';break}}}
-    const u=l[0],vcom=c.pcom?vc*(+c.pcom)/100:(+c.vcom||0);
-    return {ct,un:u.un,cli:u.cli,vc,alvo,pago,data,st,venc,canal:c.canal||'',imob:c.imob||'',resp:c.resp||'',tel:c.tel||'',email:c.email||'',pct,vcom,nf:c.nf||'',nfst:c.nfst||(st==='ok'?NF_ST[1]:NF_ST[0]),nfdata:c.nfdata||'',obs:c.obs||''};
+    let esp=null;{let c3=pago;for(const x of l.filter(x=>x.pd==null).sort((a,b)=>a.d-b.d)){c3+=x.v;if(alvo>0&&c3>=alvo-0.005){esp=x.d;break}}}
+    if(st==='nunca'){let c2=pago;for(const x of l.filter(x=>x.pd==null).sort((a,b)=>a.d-b.d)){if(x.d<H){venc=true;continue}c2+=x.v;if(c2>=alvo-0.005){data=x.d;st='prev';break}}}
+    let corrigido=!!(c.vcFix||c.gatFix||c.emailFix);
+    if(c.gatFix){data=deIso(c.gatFix);st=data<=H?'ok':'prev'}
+    if(st==='prev'&&data-H<=7)st='breve';
+    const email=data!=null?(c.emailFix?deIso(c.emailFix):segSeguinte(data)):null,pagaPrev=email!=null?pagamentoPorNF(email):null;
+    const vcom=c.pcom?vc*(+c.pcom)/100:(+c.vcom||0);
+    let pessoas=(c.pessoas||[]).map(p=>{const val=p.pct?vcom*(+p.pct)/100:(+p.valor||0),nf=p.nfEm?deIso(p.nfEm):null,paga=p.pagoEm?deIso(p.pagoEm):null;return {...p,val,nf,paga,prevPg:nf!=null?pagamentoPorNF(nf):pagaPrev,stp:paga!=null?'pago':nf!=null?'nf':'falta'}});
+    if(!pessoas.length&&(c.imob||c.resp))pessoas=[{nome:c.resp||c.imob,papel:c.canal==='House'?'House':'Imobiliária',val:vcom,tel:c.tel||'',nf:null,paga:null,prevPg:pagaPrev,stp:'falta'}];
+    const tudoPago=pessoas.length>0&&pessoas.every(p=>p.stp==='pago'),u=l[0];
+    return {ct,un:u.un,cli:u.cli,vc,vcPl,alvo,pago,data,st,venc,esp,atrasado:st!=='ok'&&esp!=null&&esp<H&&!c.gatFix,corrigido,email,pagaPrev,canal:c.canal||'',imob:c.imob||'',pct,vcom,pessoas,tudoPago,obs:c.obs||''};
   }).sort((a,b)=>(a.data??9e9)-(b.data??9e9));
 }
-const comPill=c=>c.st==='ok'?`<span class="pill p-bom">✓ Gatilho atingido em ${fData(c.data)}</span>`:c.st==='breve'?`<span class="pill p-alerta">! ${c.data===M.H?'Gatilho hoje':'Gatilho em '+(c.data-M.H)+' dia(s)'}</span>`:c.st==='prev'?`<span class="pill p-neutro">Previsto para ${fData(c.data)}</span>`:c.st==='semvalor'?'<span class="pill p-neutro">Sem valor negociado</span>':'<span class="pill p-neutro">Sem data prevista</span>';
-const textoAviso=c=>`Olá${c.resp?' '+c.resp:''}! ${c.st==='ok'?'A comissão da unidade '+c.un+' atingiu o gatilho em '+fData(c.data):'A comissão da unidade '+c.un+' tem gatilho previsto para '+fData(c.data)}. Valor negociado: ${txtV(R(c.vc))}.${c.vcom?' Comissão: '+txtV(R(c.vcom))+'.':''}`;
+function proximoPasso(c){
+  const H=M.H;
+  if(c.st==='semvalor')return {t:'Sem valor negociado',cls:'p-neutro'};
+  if(c.data==null)return {t:'Sem data prevista para o gatilho',cls:'p-neutro'};
+  if(c.tudoPago)return {t:'Comissão paga',cls:'p-bom',ic:'✓'};
+  if(c.atrasado)return {t:'Atenção: o prazo do gatilho passou (era '+fDia(c.esp)+'). Faltam '+R(Math.max(0,c.alvo-c.pago))+' pagos para atingir os '+String(c.pct).replace('.',',')+'%',cls:'p-alerta',ic:'!'};
+  if(c.st!=='ok')return {t:'Gatilho '+(c.st==='breve'?(c.data===H?'hoje':'em '+(c.data-H)+' dia(s)'):'previsto')+': '+fDia(c.data)+'. E-mail da Unigestão: '+fDia(c.email),cls:c.st==='breve'?'p-alerta':'p-neutro',ic:c.st==='breve'?'!':''};
+  if(c.email>=H)return {t:'Olhe o e-mail da Unigestão '+(c.email===H?'hoje':fDia(c.email))+'. Mande a nota fiscal no mesmo dia para receber '+fDia(c.pagaPrev),cls:'p-alerta',ic:'!'};
+  if(!c.pessoas.length)return {t:'Gatilho atingido. Cadastre quem recebe',cls:'p-critico',ic:'!'};
+  const falta=c.pessoas.filter(p=>p.stp==='falta').length;
+  if(falta)return {t:'Gatilho atingido. Falta enviar '+falta+' nota(s) fiscal(is). Se mandar hoje, recebe '+fDia(pagamentoPorNF(H)),cls:'p-critico',ic:'!'};
+  const pr=c.pessoas.filter(p=>p.stp==='nf').map(p=>p.prevPg);
+  return {t:'Notas fiscais enviadas. Pagamento '+fDia(Math.min(...pr)),cls:'p-saldo',ic:'✓'};
+}
+const textoPessoa=(c,p)=>'Olá'+(p&&p.nome?' '+p.nome:'')+'! Comissão da unidade '+c.un+': '+(c.st==='ok'?'gatilho atingido em '+fData(c.data):'gatilho previsto para '+fData(c.data))+'. A Unigestão envia o e-mail na '+fDia(c.email)+'. Mande a nota fiscal no mesmo dia para receber na '+fDia(c.pagaPrev)+'.'+(p&&p.val?' Valor: '+txtV(R(p.val))+'.':'');
+const textoAviso=c=>textoPessoa(c,null);
 function avisoComissoes(){
   if(!dados||!dados.receb.length||dados.receb[0].ct===undefined)return'';
-  const l=comissoesCalc().filter(c=>c.st==='breve');
-  if(!l.length)return'';
-  return `<div class="faixa f-alerta"><div class="ic">!</div><div class="tx"><b>${l.length} comissão(ões) com gatilho nos próximos 7 dias.</b><small>${l.slice(0,3).map(c=>`Unidade ${esc(c.un)} em ${fCurta(c.data)}${c.resp||c.imob?': avise '+esc(c.resp||c.imob):''}`).join(' · ')}</small></div><button class="btn" data-a="aba" data-v="comissoes">Ver comissões</button></div>`;
+  const H=M.H,l=comissoesCalc(),at=l.filter(c=>c.atrasado&&!c.tudoPago),g=l.filter(c=>c.st==='breve'&&!c.tudoPago),em=l.filter(c=>c.email!=null&&c.email>=H&&c.email-H<=6&&!c.tudoPago);
+  if(!g.length&&!em.length&&!at.length)return'';
+  const p=[];if(at.length)p.push(at.length+' com prazo do gatilho vencido');if(em.length)p.push('E-mail da Unigestão '+(em[0].email===H?'hoje':fDia(em[0].email))+': '+em.length+' unidade(s). Mande a nota fiscal no mesmo dia');if(g.length)p.push(g.length+' gatilho(s) nos próximos 7 dias');
+  return `<div class='faixa f-alerta'><div class='ic'>!</div><div class='tx'><b>Comissões: ${p.join(' · ')}.</b></div><button class='btn' data-a='aba' data-v='comissoes'>Ver comissões</button></div>`;
+}
+function semanaCom(l){
+  const H=M.H,seg=segDe(H),qua=seg+2,sex=seg+4,pr=seg+7;
+  const em=l.filter(c=>c.email===seg&&!c.tudoPago),emPr=l.filter(c=>c.email===pr&&!c.tudoPago);
+  const pg=d=>{let s=0,n=0;for(const c of l)for(const p of c.pessoas)if(p.stp!=='pago'&&p.prevPg===d){s+=p.val;n++}return {s,n}};
+  const a=pg(qua),b=pg(sex);
+  const cel=(d,tit,txt)=>`<div class='${d<H?'passou':d===H?'hoje':''}'><span>${fDia(d)}</span><b>${tit}</b><small>${txt}</small></div>`;
+  return `<div class='card sem-com-card'><h2 style='margin-bottom:8px'>Esta semana</h2><div class='sem-com'>${cel(seg,'E-mail da Unigestão',em.length?em.length+' unidade(s): '+em.slice(0,5).map(c=>esc(c.un)).join(', '):'Nenhuma unidade')}${cel(qua,'Pagamento',a.n?a.n+' pessoa(s) · '+R(a.s):'Nada previsto')}${cel(sex,'Pagamento',b.n?b.n+' pessoa(s) · '+R(b.s):'Nada previsto')}</div>
+  <p class='nota' style='margin:8px 0 0'>Próxima segunda (${fCurta(pr)}): ${emPr.length?emPr.length+' unidade(s) no e-mail da Unigestão':'nenhuma unidade prevista'}. <b>Regra:</b> nota fiscal na segunda, recebe na quarta. Na terça ou quarta, recebe na sexta. Depois de quarta, recebe na quarta seguinte.</p></div>`;
 }
 function telaComissoes(){
-  if(!dados.receb.length||dados.receb[0].ct===undefined)return `<div class="card" style="text-align:center"><h2 style="margin-bottom:8px">Comissões</h2><p>Para calcular as comissões, anexe a planilha de novo. Assim o app lê o contrato e o valor negociado de cada unidade.</p>${souLeitor()?'':'<button class="btn forte" data-a="anexar">Anexar planilha</button>'}</div>`;
-  const l=comissoesCalc(),f=ui.com.f;
-  const breve=l.filter(c=>c.st==='breve'),okSemNF=l.filter(c=>c.st==='ok'&&c.nfst!=='Comissão paga'),semImob=l.filter(c=>!c.imob&&c.vc>0);
-  const somaC=a=>a.reduce((s,c)=>s+c.vcom,0);
+  if(!dados.receb.length||dados.receb[0].ct===undefined)return `<div class='card' style='text-align:center'><h2 style='margin-bottom:8px'>Comissões</h2><p>Para calcular as comissões, anexe a planilha de novo. Assim o app lê o contrato e o valor negociado de cada unidade.</p>${souLeitor()?'':`<button class='btn forte' data-a='anexar'>Anexar planilha</button>`}</div>`;
+  const H=M.H,l=comissoesCalc(),f=ui.com.f,seg=segDe(H);
+  const atr=l.filter(c=>c.atrasado&&!c.tudoPago),breve=l.filter(c=>c.st==='breve'&&!c.tudoPago),faltaNF=l.filter(c=>c.st==='ok'&&!c.tudoPago&&c.email!=null&&c.email<H);
+  let semana=0;for(const c of l)for(const p of c.pessoas)if(p.stp!=='pago'&&p.prevPg>=seg&&p.prevPg<=seg+6)semana+=p.val;
   const perm=typeof Notification==='undefined'?'nao':Notification.permission;
-  const bt=(k,t)=>`<button class="${f===k?'on':''}" data-a="comFiltro" data-v="${k}">${t}</button>`;
-  return `<div class="cab"><div><h2 style="font-size:18px">Comissões</h2><p>O gatilho acontece quando os pagamentos que caíram na conta chegam a 10% do valor negociado. O aviso aparece 7 dias antes.</p></div>
-    ${perm==='granted'?'<span class="pill p-bom">✓ Avisos ligados neste aparelho</span>':perm==='nao'?'<span class="pill p-neutro">Este navegador não mostra avisos</span>':perm==='denied'?'<span class="pill p-critico">Avisos bloqueados no navegador</span>':'<button class="btn forte" data-a="comAvisos">Ativar avisos neste aparelho</button>'}</div>
-  <div class="mini-stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
-    <div><span>Gatilho nos próximos 7 dias</span><b>${breve.length}${somaC(breve)?' · '+R(somaC(breve)):''}</b></div>
-    <div><span>Gatilho atingido, comissão não paga</span><b>${okSemNF.length}${somaC(okSemNF)?' · '+R(somaC(okSemNF)):''}</b></div>
-    <div><span>Sem imobiliária definida</span><b>${semImob.length}</b></div>
+  const bt=(k,t)=>`<button class='${f===k?'on':''}' data-a='comFiltro' data-v='${k}'>${t}</button>`;
+  return `<div class='cab'><div><h2 style='font-size:18px'>Comissões</h2><p>Gatilho com 10% pago, e-mail da Unigestão na segunda seguinte e pagamento conforme o dia da nota fiscal.</p></div>
+    ${perm==='granted'?`<span class='pill p-bom'>✓ Avisos ligados neste aparelho</span>`:perm==='nao'?`<span class='pill p-neutro'>Este navegador não mostra avisos</span>`:perm==='denied'?`<span class='pill p-critico'>Avisos bloqueados no navegador</span>`:`<button class='btn forte' data-a='comAvisos'>Ativar avisos neste aparelho</button>`}</div>
+  ${semanaCom(l)}
+  <div class='mini-stats' style='grid-template-columns:repeat(4,minmax(0,1fr))'>
+    <div class='${atr.length?'ms-atr':''}'><span>Prazo do gatilho passou</span><b>${atr.length}</b></div>
+    <div><span>Gatilho nos próximos 7 dias</span><b>${breve.length}</b></div>
+    <div><span>Atingidos sem nota fiscal</span><b style='${faltaNF.length?'color:var(--critico)':''}'>${faltaNF.length}</b></div>
+    <div><span>A receber esta semana</span><b>${R(semana)}</b></div>
   </div>
-  <div class="cab" style="margin-bottom:10px"><div class="seg">${bt('prox','Próximos')}${bt('ok','Atingidos')}${bt('sem','Sem imobiliária')}${bt('todos','Todos')}</div>
-    <input class="busca" id="comBusca" placeholder="Buscar unidade, cliente, imobiliária ou responsável" value="${esc(ui.com.q)}" style="max-width:360px" aria-label="Buscar"></div>
-  <div id="comLista"></div>
-  <p class="nota">Com o app fechado, o aviso ainda não chega no celular bloqueado. Essa é a próxima etapa.</p>`;
+  <div class='cab' style='margin-bottom:10px'><div class='seg'>${bt('prox','Próximos')}${bt('ok','Atingidos')}${bt('sem','Sem quem recebe')}${bt('todos','Todos')}</div>
+    <input class='busca' id='comBusca' placeholder='Buscar unidade, cliente ou pessoa' value='${esc(ui.com.q)}' style='max-width:340px' aria-label='Buscar'></div>
+  <div id='comLista'></div>
+  <p class='nota'>Com o app fechado, o aviso ainda não chega no celular bloqueado. Essa é a próxima etapa.</p>`;
 }
 function desenhaCom(){
   const e=$('#comLista');if(!e)return;const f=ui.com.f,q=norm(ui.com.q),H=M.H;
   let l=comissoesCalc();
-  if(f==='prox')l=l.filter(c=>(c.st==='breve')||(c.st==='prev'&&c.data-H<=30)||(c.st==='ok'&&c.nfst!=='Comissão paga')).sort((x,y)=>({breve:0,prev:1,ok:2}[x.st]-{breve:0,prev:1,ok:2}[y.st])||(x.data-y.data));
+  if(f==='prox')l=l.filter(c=>!c.tudoPago&&(c.atrasado||c.st==='breve'||c.st==='ok'||(c.st==='prev'&&c.data-H<=30))).sort((x,y)=>((x.atrasado?-1:{ok:0,breve:1,prev:2}[x.st])-(y.atrasado?-1:{ok:0,breve:1,prev:2}[y.st]))||(x.data-y.data));
   if(f==='ok')l=l.filter(c=>c.st==='ok');
-  if(f==='sem')l=l.filter(c=>!c.imob&&c.vc>0);
-  if(q)l=l.filter(c=>norm(c.un+c.cli+c.imob+c.resp).includes(q));
+  if(f==='sem')l=l.filter(c=>!c.pessoas.length&&c.vc>0);
+  if(q)l=l.filter(c=>norm(c.un+c.cli+c.imob+c.pessoas.map(p=>p.nome).join(' ')).includes(q));
   const leitor=souLeitor();
-  e.innerHTML=l.length?`<div class="com-grade">${l.map(c=>{const prog=c.alvo?Math.min(100,c.pago/c.alvo*100):0;return `<div class="com-card cc-${c.st}">
-    <div class="com-top"><div><b>Unidade ${esc(c.un)}</b><small>${esc(c.cli)}</small></div>${comPill(c)}</div>
-    <div class="com-quem">${c.canal?`<span class="pill p-saldo">${esc(c.canal)}</span> `:''}${c.imob?esc(c.imob):'<span style="color:var(--tinta3)">Imobiliária não definida</span>'}${c.resp?' · '+esc(c.resp):''}</div>
-    <div class="com-barra" title="Pago até agora em relação ao gatilho"><i style="width:${prog.toFixed(1)}%"></i></div>
-    <dl class="com-num"><dt>Valor negociado</dt><dd>${R(c.vc)}</dd><dt>Gatilho (${String(c.pct).replace('.',',')}%)</dt><dd>${R(c.alvo)}</dd><dt>Pago até agora</dt><dd>${R(c.pago)}</dd>${c.vcom?`<dt>Comissão</dt><dd>${R(c.vcom)}</dd>`:''}<dt>Nota fiscal</dt><dd>${esc(c.nfst)}${c.nf?' · nº '+esc(c.nf):''}</dd></dl>
-    ${c.venc&&c.st!=='ok'?'<p class="nota" style="margin:4px 0">Há parcela vencida sem baixa: se ela for paga, o gatilho pode vir antes.</p>':''}
-    <div class="com-acoes">${leitor?'':`<button class="btn mini" data-a="comEditar" data-v="${esc(c.ct)}">Editar</button>`}${c.data?`<button class="btn mini" data-a="comCopiar" data-v="${esc(c.ct)}">Copiar aviso</button>`:''}${c.data&&c.tel?`<a class="btn mini" target="_blank" rel="noopener" href="https://wa.me/${c.tel.replace(/\D/g,'').replace(/^(?!55)/,'55')}?text=${encodeURIComponent(textoAviso(c))}">WhatsApp</a>`:''}</div>
-  </div>`}).join('')}</div>`:'<p style="color:var(--tinta3)">Nenhuma comissão neste filtro.</p>';
+  const passo=(feito,rot,quando)=>`<li class='${feito?'feito':''}'><b>${rot}</b><span>${quando}</span></li>`;
+  e.innerHTML=l.length?`<div class='com-grade'>${l.map(c=>{const pp=proximoPasso(c),prog=c.alvo?Math.min(100,c.pago/c.alvo*100):0;
+    const todasNF=c.pessoas.length>0&&c.pessoas.every(p=>p.nf!=null||p.paga!=null);
+    const prxPg=(()=>{const a=c.pessoas.filter(p=>p.stp==='nf').map(p=>p.prevPg);return a.length?Math.min(...a):c.pagaPrev})();
+    return `<div class='com-card cc-${c.tudoPago?'pago':c.atrasado?'atraso':c.st}'>
+    <div class='com-top'><div><b>Unidade ${esc(c.un)}</b><small>${esc(c.cli)}${c.imob?' · '+esc(c.imob):''}</small></div>${c.vcom?`<span class='com-val'>${R(c.vcom)}</span>`:''}</div>
+    <div class='com-passo pill ${pp.cls}'>${pp.ic?pp.ic+' ':''}${pp.t}</div>
+    <ol class='linha-tempo'>${passo(c.st==='ok','Gatilho',c.data!=null?fDia(c.data):'–')}${passo(c.email!=null&&c.email<=H,'E-mail Unigestão',c.email!=null?fDia(c.email):'–')}${passo(todasNF,'Nota fiscal',c.email!=null?'até '+fDia(c.email):'–')}${passo(c.tudoPago,'Pagamento',prxPg!=null?fDia(prxPg):'–')}</ol>
+    ${c.pessoas.length?`<ul class='pes-lista'>${c.pessoas.map(p=>`<li><span class='pes-n'><b>${esc(p.nome||'Sem nome')}</b><small>${esc(p.papel||'')}</small></span><span class='pes-v'>${p.val?R(p.val):''}</span><span class='pill ${p.stp==='pago'?'p-bom':p.stp==='nf'?'p-saldo':'p-alerta'}'>${p.stp==='pago'?'✓ Pago '+fCurta(p.paga):p.stp==='nf'?'Nota '+fCurta(p.nf)+' · recebe '+fDia(p.prevPg):'Falta nota fiscal'}</span>${p.tel&&c.data!=null?`<a class='btn mini' target='_blank' rel='noopener' href='https://wa.me/${soDig(p.tel).startsWith('55')?soDig(p.tel):'55'+soDig(p.tel)}?text=${encodeURIComponent(textoPessoa(c,p))}'>WhatsApp</a>`:''}</li>`).join('')}</ul>`:`<p class='nota' style='margin:0'>Ninguém cadastrado para receber.</p>`}
+    <details class='com-mais'><summary>Valores${c.corrigido?' · corrigido':''}</summary><div class='com-barra' title='Pago até agora em relação ao gatilho'><i style='width:${prog.toFixed(1)}%'></i></div><dl class='com-num'><dt>Valor negociado</dt><dd>${R(c.vc)}${c.vc!==c.vcPl?' (planilha '+R(c.vcPl)+')':''}</dd><dt>Gatilho (${String(c.pct).replace('.',',')}%)</dt><dd>${R(c.alvo)}</dd><dt>Pago até agora</dt><dd>${R(c.pago)}</dd>${c.vcom?`<dt>Comissão total</dt><dd>${R(c.vcom)}</dd>`:''}</dl>${c.venc&&c.st!=='ok'?`<p class='nota' style='margin:4px 0 0'>Há parcela vencida sem baixa: se ela for paga, o gatilho pode vir antes.</p>`:''}${c.obs?`<p class='nota' style='margin:4px 0 0'>${esc(c.obs)}</p>`:''}</details>
+    <div class='com-acoes'>${leitor?'':`<button class='btn mini' data-a='comEditar' data-v='${esc(c.ct)}'>Editar e corrigir</button>`}${c.data!=null?`<button class='btn mini' data-a='comCopiar' data-v='${esc(c.ct)}'>Copiar aviso</button>`:''}</div>
+  </div>`}).join('')}</div>`:`<p style='color:var(--tinta3)'>Nenhuma comissão neste filtro.</p>`;
 }
 function dlgComissao(ct){
   const c=comissoesCalc().find(x=>x.ct===ct);if(!c)return;
   const r=(cfg.comissoes||{})[ct]||{},d=$('#dlg');
-  const campo=(id,rot,val,tipo='text',extra='')=>`<div class="campo"><label for="${id}">${rot}</label><input id="${id}" type="${tipo}" value="${esc(val??'')}" ${extra}></div>`;
-  d.innerHTML=`<form method="dialog" id="fCom"><h2>Unidade ${esc(c.un)}</h2><p>${esc(c.cli)} · Valor negociado ${R2(c.vc)}</p>
-    <div class="campo"><label for="kCanal">Quem vendeu</label><select id="kCanal"><option value="">Escolha</option>${['Imobiliária','House'].map(o=>`<option ${r.canal===o?'selected':''}>${o}</option>`).join('')}</select></div>
-    ${campo('kImob','Nome da imobiliária (ou House)',r.imob)}
-    <div class="dupla">${campo('kResp','Responsável para avisar',r.resp)}${campo('kTel','Telefone (WhatsApp)',r.tel,'tel','inputmode="tel"')}</div>
-    ${campo('kEmail','E-mail do responsável',r.email,'email')}
-    <div class="dupla">${campo('kPct','Gatilho (% do valor negociado)',r.pct??10,'number','min="0" max="100" step="0.5"')}${campo('kPcom','Comissão (% do valor negociado)',r.pcom,'number','min="0" max="100" step="0.01"')}</div>
-    ${campo('kVcom','Ou valor fixo da comissão (R$)',r.vcom,'text','inputmode="decimal"')}
-    <div class="dupla">${campo('kNf','Nº da nota fiscal',r.nf)}<div class="campo"><label for="kNfst">Situação</label><select id="kNfst">${NF_ST.map(o=>`<option ${(r.nfst||c.nfst)===o?'selected':''}>${o}</option>`).join('')}</select></div></div>
-    ${campo('kNfdata','Data do pagamento da comissão',r.nfdata,'date')}
+  let pes=(r.pessoas||[]).map(p=>({...p}));
+  if(!pes.length&&(r.imob||r.resp))pes=[{nome:r.resp||r.imob,papel:r.canal==='House'?'House':'Imobiliária',tel:r.tel||''}];
+  const campo=(id,rot,val,tipo,extra)=>`<div class='campo'><label for='${id}'>${rot}</label><input id='${id}' type='${tipo||'text'}' value='${esc(val??'')}' ${extra||''}></div>`;
+  const linhas=()=>pes.map((p,i)=>`<div class='pes-ed'><div class='dupla'>${campo('pN'+i,'Nome',p.nome)}<div class='campo'><label for='pP${i}'>Função</label><select id='pP${i}'>${PAPEIS.map(o=>`<option ${p.papel===o?'selected':''}>${o}</option>`).join('')}</select></div></div><div class='dupla'>${campo('pC'+i,'% da comissão total',p.pct,'number',`min='0' max='100' step='0.01'`)}${campo('pV'+i,'Ou valor (R$)',p.valor,'text',`inputmode='decimal'`)}</div><div class='dupla'>${campo('pT'+i,'Telefone (WhatsApp)',p.tel,'tel')}${campo('pF'+i,'Nota fiscal enviada em',p.nfEm,'date')}</div><div class='dupla'>${campo('pG'+i,'Pago em',p.pagoEm,'date')}<div class='campo' style='justify-content:end'><button type='button' class='btn mini' data-pes-del='${i}'>Remover pessoa</button></div></div></div>`).join('');
+  const ler=()=>{pes=pes.map((p,i)=>({nome:$('#pN'+i).value.trim(),papel:$('#pP'+i).value,pct:$('#pC'+i).value===''?'':+$('#pC'+i).value,valor:isNaN(lerValor($('#pV'+i).value))?'':lerValor($('#pV'+i).value),tel:$('#pT'+i).value.trim(),nfEm:$('#pF'+i).value,pagoEm:$('#pG'+i).value}))};
+  d.innerHTML=`<form method='dialog' id='fCom'><h2>Unidade ${esc(c.un)}</h2><p>${esc(c.cli)} · Gatilho ${c.data!=null?fData(c.data):'sem data'} · E-mail da Unigestão ${c.email!=null?fDia(c.email):'–'}</p>
+    <div class='dupla'><div class='campo'><label for='kCanal'>Quem vendeu</label><select id='kCanal'><option value=''>Escolha</option>${['Imobiliária','House'].map(o=>`<option ${r.canal===o?'selected':''}>${o}</option>`).join('')}</select></div>${campo('kImob','Nome da imobiliária',r.imob)}</div>
+    <div class='dupla'>${campo('kPcom','Comissão total (% do valor negociado)',r.pcom,'number',`min='0' max='100' step='0.01'`)}${campo('kVcom','Ou valor total (R$)',r.vcom,'text',`inputmode='decimal'`)}</div>
+    <h3 class='dlg-sub'>Pessoas que recebem</h3><div id='pesLista'>${linhas()}</div>
+    <button type='button' class='btn' id='pesAdd' style='margin-bottom:14px'>Adicionar pessoa</button>
+    <h3 class='dlg-sub'>Correções</h3><p class='nota' style='margin:0 0 8px'>Deixe em branco para usar o cálculo automático.</p>
+    <div class='dupla'>${campo('kVcFix','Valor negociado correto (R$)',r.vcFix,'text',`inputmode='decimal' placeholder='Planilha: ${txtV(R(c.vcPl))}'`)}${campo('kPct','Gatilho (% do valor negociado)',r.pct??10,'number',`min='0' max='100' step='0.5'`)}</div>
+    <div class='dupla'>${campo('kGat','Data correta do gatilho',r.gatFix,'date')}${campo('kEmail','Data correta do e-mail da Unigestão',r.emailFix,'date')}</div>
     ${campo('kObs','Observação',r.obs)}
-    <div class="acoes"><button type="button" class="btn" data-a="dlgFechar">Cancelar</button><button class="btn forte" type="submit">Salvar</button></div></form>`;
+    <div class='acoes'><button type='button' class='btn' data-a='dlgFechar'>Cancelar</button><button class='btn forte' type='submit'>Salvar</button></div></form>`;
   d.showModal();
+  $('#pesAdd').addEventListener('click',()=>{ler();pes.push({nome:'',papel:'Corretor'});$('#pesLista').innerHTML=linhas()});
+  $('#pesLista').addEventListener('click',ev=>{const b=ev.target.closest('[data-pes-del]');if(!b)return;ler();pes.splice(+b.dataset.pesDel,1);$('#pesLista').innerHTML=linhas()});
   $('#fCom').addEventListener('submit',async()=>{
-    const v=id=>$('#'+id).value.trim(),vc=lerValor(v('kVcom'));
+    ler();const v=id=>$('#'+id).value.trim(),num_=t=>{const n=lerValor(t);return isNaN(n)?'':n};
     cfg.comissoes=cfg.comissoes||{};
-    cfg.comissoes[ct]={canal:v('kCanal'),imob:v('kImob'),resp:v('kResp'),tel:v('kTel'),email:v('kEmail'),pct:v('kPct')===''?10:+v('kPct'),pcom:v('kPcom')===''?'':+v('kPcom'),vcom:isNaN(vc)?'':vc,nf:v('kNf'),nfst:v('kNfst'),nfdata:v('kNfdata'),obs:v('kObs')};
+    cfg.comissoes[ct]={canal:v('kCanal'),imob:v('kImob'),pcom:v('kPcom')===''?'':+v('kPcom'),vcom:num_(v('kVcom')),vcFix:num_(v('kVcFix')),pct:v('kPct')===''?10:+v('kPct'),gatFix:v('kGat'),emailFix:v('kEmail'),obs:v('kObs'),pessoas:pes.filter(p=>p.nome)};
     await salvarCfg();render();toast('Comissão salva.');
   });
 }
@@ -1085,14 +1164,22 @@ async function ativarAvisos(){
 async function checarAvisos(forcar){
   if(!dados||typeof Notification==='undefined'||Notification.permission!=='granted')return;
   if(!dados.receb.length||dados.receb[0].ct===undefined)return;
-  let feitos={};try{feitos=JSON.parse(localStorage.getItem('caixa-avisos')||'{}')}catch(e){}
-  const novos=comissoesCalc().filter(c=>c.st==='breve'&&!feitos[c.ct+':'+c.data]);
-  for(const c of novos){
-    const titulo=`Comissão: unidade ${c.un} em ${fCurta(c.data)}`,corpo=`${c.imob||'Imobiliária não definida'}${c.resp?'. Avise '+c.resp:''} que a comissão cai em ${fData(c.data)}.`;
-    let reg=null;try{reg=navigator.serviceWorker?await navigator.serviceWorker.getRegistration():null}catch(e){}
-    try{if(reg)await reg.showNotification(titulo,{body:corpo,tag:'com-'+c.ct,icon:'icone-192.png'});else new Notification(titulo,{body:corpo,tag:'com-'+c.ct});feitos[c.ct+':'+c.data]=Date.now()}catch(e){}
+  const H=M.H;let feitos={};try{feitos=JSON.parse(localStorage.getItem('caixa-avisos')||'{}')}catch(e){}
+  const fila=[];
+  for(const c of comissoesCalc()){
+    if(c.tudoPago)continue;
+    const quem=c.pessoas.map(p=>p.nome).filter(Boolean).join(', ')||c.imob;
+    if(c.atrasado)fila.push({k:'atr:'+c.ct+':'+c.esp,t:'Atenção: prazo do gatilho passou, unidade '+c.un,b:'Era '+fDia(c.esp)+' e os 10% ainda não foram pagos. Faltam '+txtV(R(Math.max(0,c.alvo-c.pago)))+'.'});
+    if(c.st==='breve')fila.push({k:'gat:'+c.ct+':'+c.data,t:'Comissão: unidade '+c.un+' com gatilho em '+fCurta(c.data),b:'E-mail da Unigestão na '+fDia(c.email)+'.'+(quem?' Avise '+quem+'.':'')});
+    if(c.email!=null&&(c.email===H||c.email===H+1))fila.push({k:'mail:'+c.ct+':'+c.email,t:(c.email===H?'Hoje':'Amanhã')+': e-mail da Unigestão, unidade '+c.un,b:'Confira o e-mail e mande a nota fiscal no mesmo dia para receber na '+fDia(c.pagaPrev)+'.'+(quem?' Avise '+quem+'.':'')});
   }
-  if(novos.length)localStorage.setItem('caixa-avisos',JSON.stringify(feitos));
+  let mudou=false;
+  for(const a of fila){
+    if(feitos[a.k])continue;
+    let reg=null;try{reg=navigator.serviceWorker?await navigator.serviceWorker.getRegistration():null}catch(e){}
+    try{if(reg)await reg.showNotification(a.t,{body:a.b,tag:a.k,icon:'icone-192.png'});else new Notification(a.t,{body:a.b,tag:a.k});feitos[a.k]=Date.now();mudou=true}catch(e){}
+  }
+  if(mudou)localStorage.setItem('caixa-avisos',JSON.stringify(feitos));
 }
 function telaBoasVindas(){
   if(souLeitor())return `<div class="boas"><h1>Caixa The One</h1><p style="font-size:18px;color:var(--tinta2);margin:0">Os dados ainda não foram carregados. Assim que a administradora ligar a planilha, eles aparecem aqui sozinhos.</p><p class="nota"><button class="link" data-a="sair">Sair</button></p></div>`;
