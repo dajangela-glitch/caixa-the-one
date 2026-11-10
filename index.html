@@ -285,6 +285,24 @@ table.tot td,table.tot th{font-size:16px;padding:11px 14px}
 dialog{max-width:620px}
 @media (max-width:700px){.sem-com{grid-template-columns:1fr}.linha-tempo li{font-size:11.5px}}
 a.btn{text-decoration:none;display:inline-flex;align-items:center}
+@media (min-width:701px){
+  .hero-m{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);border-radius:18px;overflow:hidden;margin-bottom:14px;color:#fff}
+  .hero-m.st-v{background:#55704F}.hero-m.st-a{background:#96702A}.hero-m.st-r{background:#9C4436}
+  .hero-m .hm-top{all:unset;box-sizing:border-box;display:flex;gap:20px;align-items:center;padding:24px 28px;cursor:pointer}
+  .hero-m .hm-ic{flex:none;width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:34px;font-weight:700}
+  .hero-m .hm-tx>span{display:block}
+  .hero-m .hm-t{font-size:20px;font-weight:700}
+  .hero-m .hm-n{font-size:46px;font-weight:700;line-height:1.1}
+  .hero-m .hm-s{font-size:15px;opacity:.92}
+  .hero-m .hm-al{all:unset;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:22px 26px;background:rgba(0,0,0,.18);cursor:pointer}
+  .hero-m .hm-al b{display:block;font-size:19px}
+  .hero-m .hm-al span{display:block;font-size:15px;opacity:.92}
+  .faixa.f-grande{display:none!important}
+  .mais-m{display:flex;flex-direction:column;position:fixed;top:112px;right:max(20px,calc(50vw - 620px));width:290px;z-index:41;background:var(--folha);border-radius:14px;padding:6px;box-shadow:0 10px 30px rgba(36,33,30,.22)}
+  .mais-m button{border:0;background:none;text-align:left;font-size:16px;font-weight:600;padding:12px 14px;border-radius:9px}
+  .mais-m button:hover,.mais-m button.on{background:var(--calmo)}
+  .fundo[data-a=mais]{background:transparent}
+}
 /* Formulários */
 .campo{display:grid;gap:4px;margin-bottom:12px}
 .campo label{font-weight:600;font-size:15px}
@@ -564,7 +582,7 @@ async function carregarNuvem(){
   const r=lin&&lin[0];
   dados=r&&r.dados||null;areas=r&&r.areas||AREAS0();cfg={...CFG0,...((r&&r.cfg)||{})};carimbo=r&&r.enviado_em;
   if(perfil.papel==='admin'){const h=await dbGet('handle').catch(()=>null);if(h){handle=h;try{const p=await h.queryPermission({mode:'read'});syncEstado=p==='granted'?'auto':'perm'}catch(e){syncEstado='perm'}}}
-  authTela=null;erroAuth='';avisoAuth='';rec();render();if(syncEstado==='auto')checar();contaPendentes();
+  authTela=null;erroAuth='';avisoAuth='';rec();render();if(syncEstado==='auto')checar();contaPendentes();if(typeof Notification!=='undefined'&&Notification.permission==='granted')inscreverPush(false);
 }
 /* outras telas abertas recebem a atualização sozinhas */
 async function puxarNuvem(){
@@ -1101,7 +1119,7 @@ function telaComissoes(){
   <div class='cab' style='margin-bottom:10px'><div class='seg'>${bt('prox','Próximos')}${bt('ok','Atingidos')}${bt('sem','Sem quem recebe')}${bt('todos','Todos')}</div>
     <input class='busca' id='comBusca' placeholder='Buscar unidade, cliente ou pessoa' value='${esc(ui.com.q)}' style='max-width:340px' aria-label='Buscar'></div>
   <div id='comLista'></div>
-  <p class='nota'>Com o app fechado, o aviso ainda não chega no celular bloqueado. Essa é a próxima etapa.</p>`;
+  <p class='nota'>${localStorage.getItem('caixa-push')==='ok'?'Este aparelho recebe os avisos todo dia às 8h, mesmo com o app fechado.':'No celular, para receber avisos com o app fechado, ative os avisos (no iPhone, instale o app na tela inicial antes).'}</p>`;
 }
 function desenhaCom(){
   const e=$('#comLista');if(!e)return;const f=ui.com.f,q=norm(ui.com.q),H=M.H;
@@ -1156,10 +1174,24 @@ async function copiarAviso(ct){
   const c=comissoesCalc().find(x=>x.ct===ct);if(!c)return;const t=textoAviso(c);
   try{await navigator.clipboard.writeText(t);toast('Aviso copiado. Cole no WhatsApp ou e-mail.')}catch(e){prompt('Copie o aviso:',t)}
 }
+/* avisos com o app fechado: o aparelho se inscreve e o servidor manda os avisos todo dia */
+const VAPID_PUB='BFfLufjW-TInMxoVVYytr-lHSmoX4NRVjgZSitR2xVR9sQG2EAuL3s4Iccxt69ZBPyUbuiR4X55dMiGlDuC6vaY';
+async function inscreverPush(mostrar){
+  if(!emNuvem()||!sessao||!('serviceWorker' in navigator)||!('PushManager' in window))return;
+  try{
+    const reg=await Promise.race([navigator.serviceWorker.ready,new Promise((_,n)=>setTimeout(()=>n(new Error('sem sw')),8000))]);
+    const b=atob(VAPID_PUB.replace(/-/g,'+').replace(/_/g,'/')),chave=new Uint8Array(b.length);for(let i=0;i<b.length;i++)chave[i]=b.charCodeAt(i);
+    const sub=(await reg.pushManager.getSubscription())||(await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:chave}));
+    const j=sub.toJSON();
+    await req('/rest/v1/push_inscricoes?on_conflict=endpoint',{metodo:'POST',corpo:{endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth},prefer:'resolution=merge-duplicates'});
+    localStorage.setItem('caixa-push','ok');
+    if(mostrar)toast('Pronto: este aparelho recebe os avisos mesmo com o app fechado.');
+  }catch(e){if(mostrar)toast('Os avisos funcionam com o app aberto. Para o app fechado, a configuração do servidor ainda precisa ser concluída.',9000)}
+}
 async function ativarAvisos(){
   if(typeof Notification==='undefined'){toast('Este navegador não mostra avisos.');return}
   const p=await Notification.requestPermission();render();
-  if(p==='granted'){toast('Avisos ligados neste aparelho.');checarAvisos(true)}else toast('Os avisos não foram permitidos.');
+  if(p==='granted'){toast('Avisos ligados neste aparelho.');checarAvisos(true);inscreverPush(true)}else toast('Os avisos não foram permitidos.');
 }
 async function checarAvisos(forcar){
   if(!dados||typeof Notification==='undefined'||Notification.permission!=='granted')return;
@@ -1206,7 +1238,7 @@ function topo(){
   const b=(k,t)=>`<button class="aba ${ui.aba===k?'on':''}" data-a="aba" data-v="${k}">${t}</button>`;
   return `<header class="topo"><div class="topo-in">
     <div class="marca">Caixa The One</div>
-    <nav class="abas">${b('inicio','Início')}${b('semana','Planejamento Semanal')}${b('dia','Fluxo Caixa Diário')}${b('totais','Totais')}${b('datas','Melhores datas')}${b('comissoes','Comissões')}${b('areas','Despesas por Área')}${b('detalhes','Detalhes')}${b('relatorios','Relatórios')}${souLeitor()?'':b('config','Configuração')}</nav>
+    <nav class="abas">${b('inicio','Início')}${b('semana','Planejamento Semanal')}${b('dia','Fluxo Caixa Diário')}${b('comissoes','Comissões')}${b('totais','Totais')}${b('relatorios','Relatórios')}<button class="aba ${ui.mais||['datas','areas','detalhes','config'].includes(ui.aba)?'on':''}" data-a="mais">Mais ▾</button></nav>
     <div class="sync" id="sync"></div>
     ${souLeitor()?'':'<button class="btn forte" data-a="anexar">Anexar planilha</button>'}<button class="btn" data-a="sair">Sair</button>
 
