@@ -313,7 +313,7 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
 .ch-topo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--linha);flex-wrap:wrap}
 .ch-topo>b{font-family:'Krona One',sans-serif;font-size:15px}
 .ch-topo>span{display:flex;gap:8px;align-items:center}
-.ch-modo button{min-height:32px;font-size:14px;padding:4px 12px}
+.ch-modo button{min-height:32px;font-size:14px;padding:4px 12px}.ch-voz{border:1px solid var(--linha);background:var(--folha);border-radius:10px;padding:6px 8px;font:inherit;font-size:14px;color:var(--tinta2);max-width:170px}
 .ch-tg{border:0;background:none;color:var(--tinta2);font-weight:600;padding:6px 8px;cursor:pointer}
 .ch-msgs{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:12px;background:var(--fundo,#F5F3EE)}
 .ch-m{max-width:88%;border-radius:18px;padding:11px 14px;line-height:1.45}
@@ -1380,7 +1380,7 @@ async function rankArqDel(id){
 }
 
 /* ---------- Assistente: a pessoa fala, o app entende e abre o formulário certo para conferir ---------- */
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 let ouvindo=null;
 const semAc=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const MESES_N=['janeiro','fevereiro','marco','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -1528,11 +1528,30 @@ function fraseRegistro(r){
   return 'Comissão, '+un+(r.v?', valor negociado '+R2(r.v):'')+'.'+(cm?' Já existe: vou abrir para editar.':'');
 }
 const vozLigada=()=>localStorage.getItem('caixa-voz')!=='off';
+/* voz: escolhe a voz mais natural do aparelho e fala números e datas como uma pessoa */
+const MESES_F=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const DSEM_F={dom:'domingo',seg:'segunda',ter:'terça',qua:'quarta',qui:'quinta',sex:'sexta','sáb':'sábado'};
+function vozesPT(){if(!('speechSynthesis' in window))return[];const v=speechSynthesis.getVoices();const br=v.filter(x=>/^pt(-|_)BR/i.test(x.lang));return br.length?br:v.filter(x=>/^pt/i.test(x.lang))}
+function notaVoz(x){let n=0;const s=x.name;if(/natural|neural/i.test(s))n+=8;if(/online/i.test(s))n+=3;if(/enhanced|premium|melhorad|aprimorad/i.test(s))n+=6;if(/google/i.test(s))n+=4;if(/francisca|thalita|luciana|antonio|felipe|fernanda|vitoria/i.test(s))n+=2;if(/^pt(-|_)BR/i.test(x.lang))n+=2;if(!x.localService)n+=1;return n}
+function vozEscolhida(){const l=vozesPT();if(!l.length)return null;const nome=localStorage.getItem('caixa-voz-nome');return l.find(x=>x.name===nome)||l.slice().sort((a,b)=>notaVoz(b)-notaVoz(a))[0]}
+function dinheiroFalado(n){const neg=n<0;n=Math.abs(n);if(neg)return 'menos '+dinheiroFalado(n);if(n>=1e6){const m=Math.round(n/1e5)/10;return (m===1?'1 milhão':String(m).replace('.',',')+' milhões')+' de reais'}if(n>=1e3)return Math.round(n/1e3)+' mil reais';return Math.round(n)+' reais'}
+function falaHumana(t){
+  return String(t).replace(/-\s?R\$\s?/g,'R$ -')
+    .replace(/R\$\s?(-?\d{1,3}(?:\.\d{3})*|-?\d+)(,\d+)?/g,(m,a,b)=>dinheiroFalado(lerValor(a+(b||''))))
+    .replace(/\b(dom|seg|ter|qua|qui|sex|sáb) (\d{1,2})\/(\d{1,2})\b/g,(m,d,a,b)=>DSEM_F[d]+', '+(+a)+' de '+MESES_F[+b-1])
+    .replace(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/g,(m,a,b)=>(+a)+' de '+MESES_F[+b-1])
+    .replace(/\b(\d{1,2})\/(\d{1,2})\b/g,(m,a,b)=>+b>=1&&+b<=12?(+a)+' de '+MESES_F[+b-1]:m)
+    .replace(/\bun\.\s?/g,'unidade ').replace(/\s·\s/g,', ').replace(/\s*\(/g,', ').replace(/\)/g,'').replace(/;/g,'.').replace(/\s+/g,' ').trim();
+}
 function falar(t,forcar){
   if((!forcar&&!vozLigada())||!('speechSynthesis' in window))return;
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/R\$\s?/g,'').replace(/(\d)\.(\d{3})/g,'$1$2')+'');u.lang='pt-BR';u.rate=1.05;const v=speechSynthesis.getVoices().find(x=>/pt(-|_)BR/i.test(x.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}
+  try{
+    speechSynthesis.cancel();const v=vozEscolhida();
+    const frases=falaHumana(t).split(/(?<=[.!?])\s+/).filter(Boolean);
+    for(const fr of frases){const u=new SpeechSynthesisUtterance(fr);u.lang=v?v.lang:'pt-BR';if(v)u.voice=v;u.rate=/google/i.test(v&&v.name||'')?1.0:0.98;u.pitch=1;speechSynthesis.speak(u)}
+  }catch(e){}
 }
-function enviarAssist(texto){
+if('speechSynthesis' in window){speechSynthesis.getVoices();speechSynthesis.addEventListener&&speechSynthesis.addEventListener('voiceschanged',()=>{const s=$('#chVoz');if(s&&!s.options.length&&ui.aba==='assist')render()})}function enviarAssist(texto){
   texto=String(texto||'').replace(/\s+/g,' ').trim();if(!texto)return;
   const resp=responder(texto);
   ui.as.msgs.push({de:'eu',t:texto},{de:'app',t:resp.txt,tit:resp.tit||'',cor:resp.cor||'',cards:resp.cards||null,lista:resp.lista&&resp.lista.length?resp.lista:null,reg:resp.tipo==='registro'?texto:null,ir:resp.ir||null,dia:resp.dia??null});
@@ -1546,7 +1565,7 @@ function bolhas(){
 }
 function telaAssist(){
   return `<div class='ch'>
-    <div class='ch-topo'><b>Assistente</b><span><span class='seg ch-modo'><button class='${vozLigada()?'on':''}' data-a='asVoz' data-v='on'>Ler e ouvir</button><button class='${vozLigada()?'':'on'}' data-a='asVoz' data-v='off'>Só ler</button></span>${ui.as.msgs.length?`<button class='ch-tg' data-a='asLimpar'>Limpar</button>`:''}</span></div>
+    <div class='ch-topo'><b>Assistente</b><span><span class='seg ch-modo'><button class='${vozLigada()?'on':''}' data-a='asVoz' data-v='on'>Ler e ouvir</button><button class='${vozLigada()?'':'on'}' data-a='asVoz' data-v='off'>Só ler</button></span>${vozLigada()&&vozesPT().length>1?`<select id='chVoz' class='ch-voz' aria-label='Escolher voz'>${vozesPT().map(v=>`<option value='${esc(v.name)}' ${(vozEscolhida()||{}).name===v.name?'selected':''}>${esc(v.name.replace(/^(Microsoft|Google)\s*/,'').replace(/\s*-\s*Portuguese.*$/i,'').replace(/\s*Online\s*\(Natural\)/i,' (natural)'))}</option>`).join('')}</select>`:''}${ui.as.msgs.length?`<button class='ch-tg' data-a='asLimpar'>Limpar</button>`:''}</span></div>
     <div class='ch-msgs' id='chMsgs'>${bolhas()}</div>
     <form class='ch-barra' id='chForm'><input id='chIn' autocomplete='off' placeholder='${ouvindo?'Ouvindo…':'Pergunte ou diga o que registrar'}' value='${esc(ui.as.texto)}' aria-label='Mensagem'><button type='submit' class='ch-env' aria-label='Enviar'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12h14M13 6l6 6-6 6'/></svg></button><button type='button' class='ch-mic ${ouvindo?'on':''}' data-a='asMic' aria-label='${ouvindo?'Parar':'Falar'}'>${MIC_SVG}</button></form>
     ${SR?'':`<p class='nota ch-nota'>Para falar, toque na caixa e use o microfone do teclado.</p>`}
@@ -1560,17 +1579,24 @@ function desenhaChat(){
 }
 function asMic(){
   if(!SR){const e=$('#chIn');if(e){e.focus();toast('Use o microfone do teclado para ditar.')}return}
-  if(ouvindo){try{ouvindo.stop()}catch(e){}return}
+  if(ouvindo){ouvindo.terminar();return}
   try{speechSynthesis.cancel()}catch(e){}
-  const rec=new SR();rec.lang='pt-BR';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
-  let ultimo='';
-  /* cada evento traz a frase inteira até agora: troca o texto em vez de somar (evita duplicar no Android) */
-  rec.onresult=ev=>{let t='';for(let i=0;i<ev.results.length;i++)t+=ev.results[i][0].transcript+' ';ultimo=t.replace(/\s+/g,' ').trim();const e=$('#chIn');if(e)e.value=ultimo};
-  rec.onerror=ev=>{if(ev.error==='not-allowed'||ev.error==='service-not-allowed')toast('Permita o uso do microfone para este site.');else if(ev.error==='no-speech')toast('Não ouvi nada. Toque e fale de novo.')};
-  rec.onend=()=>{ouvindo=null;const mc=$('.ch-mic');if(mc)mc.classList.remove('on');const e=$('#chIn');if(e)e.placeholder='Pergunte ou diga o que registrar';if(ultimo){ui.as.texto='';enviarAssist(dedup(ultimo))}};
-  try{rec.start();ouvindo=rec;const mc=$('.ch-mic');if(mc)mc.classList.add('on');const e=$('#chIn');if(e){e.value='';e.placeholder='Ouvindo…'}}catch(e){toast('Não foi possível ligar o microfone.')}
-}
-/* remove repetição de palavras ou trechos que alguns celulares mandam em dobro */
+  /* escuta até a pessoa ficar 2 segundos em silêncio; se o celular cortar antes, volta a ouvir */
+  let base='',atual='',timer=null,acabou=false,rec=null,voltas=0;
+  const ESPERA=2200,inp=()=>$('#chIn');
+  const mostra=()=>{const e=inp();if(e)e.value=(base+' '+atual).replace(/\s+/g,' ').trim()};
+  const desliga=()=>{ouvindo=null;const mc=$('.ch-mic');if(mc)mc.classList.remove('on');const e=inp();if(e)e.placeholder='Pergunte ou diga o que registrar'};
+  const terminar=()=>{if(acabou)return;acabou=true;clearTimeout(timer);try{rec&&rec.stop()}catch(e){}desliga();const t=dedup((base+' '+atual).replace(/\s+/g,' ').trim());if(t){ui.as.texto='';enviarAssist(t)}};
+  const junta=res=>{const p=[];for(let i=0;i<res.length;i++){const t=res[i][0].transcript.trim();if(!t)continue;const u=p[p.length-1];if(u&&semAc(t).startsWith(semAc(u)))p[p.length-1]=t;else if(u&&semAc(u).startsWith(semAc(t)))continue;else p.push(t)}return p.join(' ')};
+  const inicia=()=>{
+    rec=new SR();rec.lang='pt-BR';rec.interimResults=true;rec.continuous=true;rec.maxAlternatives=1;
+    rec.onresult=ev=>{atual=junta(ev.results);mostra();clearTimeout(timer);timer=setTimeout(terminar,ESPERA)};
+    rec.onerror=ev=>{if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){acabou=true;desliga();toast('Permita o uso do microfone para este site.')}};
+    rec.onend=()=>{if(acabou)return;if(!(base+atual).trim()&&!timer){acabou=true;desliga();toast('Não ouvi nada. Toque e fale de novo.');return}base=(base+' '+atual).trim();atual='';if(++voltas>6){terminar();return}try{rec=null;inicia()}catch(e){terminar()}};
+    rec.start();
+  };
+  try{inicia();ouvindo={terminar};const mc=$('.ch-mic');if(mc)mc.classList.add('on');const e=inp();if(e){e.value='';e.placeholder='Pode falar… toque no microfone para enviar já'}}catch(e){toast('Não foi possível ligar o microfone.')}
+}/* remove repetição de palavras ou trechos que alguns celulares mandam em dobro */
 function dedup(t){
   let w=t.split(' ');
   for(let n=Math.floor(w.length/2);n>=1;n--){for(let i=0;i+2*n<=w.length;i++){if(w.slice(i,i+n).join(' ').toLowerCase()===w.slice(i+n,i+2*n).join(' ').toLowerCase()){w.splice(i+n,n);i--}}}
@@ -2875,7 +2901,7 @@ document.addEventListener('click',async e=>{
     case'semana':ui.semana=+v;render();{const a=$('#detSem');if(a&&b.tagName==='TR')a.scrollIntoView({behavior:'smooth',block:'start'})}break;
     case'verPassadas':ui.verPassadas=!ui.verPassadas;render();break;
     case'reconectar':reconectar();break;
-    case'aba':if(ouvindo){try{ouvindo.stop()}catch(x){}}ui.aba=v;ui.mais=false;fecharPainel();render();scrollTo(0,0);break;
+    case'aba':if(ouvindo){try{ouvindo.terminar()}catch(x){}}ui.aba=v;ui.mais=false;fecharPainel();render();scrollTo(0,0);break;
     case'mais':ui.mais=!ui.mais;render();break;
     case'ajustes':ui.aba='config';render();break;
     case'classificar':dlgClasse(b.dataset.t,v);break;
@@ -2911,6 +2937,7 @@ document.addEventListener('change',e=>{
   if(e.target.dataset.a==='soMov'){ui.soMov=e.target.checked;render()}
   if(e.target.dataset&&e.target.dataset.rel){const c=e.target.dataset.rel;ui.rel[c]=e.target.type==='checkbox'?e.target.checked:e.target.value;render()}
   if(e.target.dataset&&e.target.dataset.soma){const a=areas.lista.find(x=>x.id===e.target.dataset.soma);if(a){if(souLeitor()){e.target.checked=a.soma;toast('Só a administradora pode alterar isso.');return}a.soma=e.target.checked;salvarAreas();rec();render();toast(a.soma?a.nome+' agora soma no caixa.':a.nome+' saiu da conta do caixa.')}}
+  if(e.target.id==='chVoz'){localStorage.setItem('caixa-voz-nome',e.target.value);falar('Olá! Esta é a minha voz. Pode perguntar o que quiser sobre o caixa.',true)}
   if(e.target.id==='totPrev'){ui.totPrev=e.target.checked;render()}
   if(e.target.dataset&&e.target.dataset.ap&&e.target.dataset.ap!=='q'){ui.ap[e.target.dataset.ap]=e.target.value;render()}
   if(e.target.id==='fMes'){ui.det.mes=e.target.value;ui.det.lim=200;desenhaDet()}
