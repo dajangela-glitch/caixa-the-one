@@ -308,6 +308,57 @@ a.btn{text-decoration:none;display:inline-flex;align-items:center}
   .mais-m button:hover,.mais-m button.on{background:var(--calmo)}
   .fundo[data-a=mais]{background:transparent}
 }
+/* assistente em conversa */
+.ch{max-width:780px;margin:0 auto;display:flex;flex-direction:column;height:calc(100vh - 165px);min-height:420px;background:var(--folha);border:1px solid var(--linha);border-radius:20px;overflow:hidden}
+.ch-topo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--linha);flex-wrap:wrap}
+.ch-topo>b{font-family:'Krona One',sans-serif;font-size:15px}
+.ch-topo>span{display:flex;gap:8px;align-items:center}
+.ch-modo button{min-height:32px;font-size:14px;padding:4px 12px}
+.ch-tg{border:0;background:none;color:var(--tinta2);font-weight:600;padding:6px 8px;cursor:pointer}
+.ch-msgs{flex:1;overflow-y:auto;padding:18px 16px;display:flex;flex-direction:column;gap:12px;background:var(--fundo,#F5F3EE)}
+.ch-m{max-width:88%;border-radius:18px;padding:11px 14px;line-height:1.45}
+.ch-m p{margin:0}
+.ch-eu{align-self:flex-end;background:var(--tinta);color:#fff;border-bottom-right-radius:6px}
+.ch-cor{border:0;background:none;color:rgba(255,255,255,.7);font-size:13px;padding:4px 0 0;cursor:pointer;text-decoration:underline}
+.ch-app{align-self:flex-start;background:var(--folha);border:1px solid var(--linha);border-bottom-left-radius:6px;min-width:min(100%,320px)}
+.ch-tit{font-weight:700;font-size:16.5px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ch-tit::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--saldo);flex:none}
+.ch-c-v .ch-tit::before{background:#55704F}.ch-c-a .ch-tit::before{background:#96702A}.ch-c-r .ch-tit::before{background:#9C4436}
+.ch-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
+.ch-card{border-radius:12px;padding:9px 11px;background:var(--calmo)}
+.ch-card span{display:block;font-size:13px;color:var(--tinta2)}
+.ch-card b{display:block;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-entra{background:#E3EBE6}.cc-sai{background:#F3E4DC}.cc-saldo{background:var(--saldo-bg)}.cc-prev{background:var(--prev-bg)}
+.cc-v{background:var(--bom-bg)}.cc-a{background:var(--alerta-bg)}.cc-r{background:var(--critico-bg)}
+.ch-lista{list-style:none;margin:10px 0 0;padding:0}
+.ch-lista li{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid var(--linha);font-size:15px}
+.ch-lista li span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.ch-lista li b{white-space:nowrap}
+.ch-ac{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.ch-ac .btn{min-height:38px}
+.ch-ouvir{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--linha);background:none;border-radius:99px;padding:6px 12px;font-weight:600;color:var(--tinta2);cursor:pointer;min-height:36px}
+.ch-ouvir svg{width:17px;height:17px}
+.ch-vazio{margin:auto;text-align:center;max-width:430px;padding:10px}
+.ch-av{width:64px;height:64px;border-radius:50%;background:var(--tinta);color:#fff;display:grid;place-items:center;margin:0 auto 12px}
+.ch-av svg{width:30px;height:30px}
+.ch-vazio b{font-size:18px}
+.ch-vazio p{color:var(--tinta2);margin:6px 0 14px}
+.ch-sug{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.ch-sug button{border:1px solid var(--linha);background:var(--folha);border-radius:99px;padding:9px 14px;font-weight:600;color:var(--tinta);cursor:pointer}
+.ch-barra{display:flex;gap:8px;align-items:center;padding:10px 12px;border-top:1px solid var(--linha);background:var(--folha)}
+#chIn{flex:1;min-width:0;font:inherit;font-size:16.5px;padding:12px 16px;border:1px solid var(--linha);border-radius:99px;background:#fff;color:var(--tinta)}
+.ch-env{width:46px;height:46px;border-radius:50%;border:1px solid var(--linha);background:var(--folha);display:grid;place-items:center;color:var(--tinta);flex:none;cursor:pointer}
+.ch-env svg{width:20px;height:20px}
+.ch-mic{width:56px;height:56px;border-radius:50%;border:0;background:var(--tinta);color:#fff;display:grid;place-items:center;flex:none;cursor:pointer}
+.ch-mic svg{width:26px;height:26px}
+.ch-mic.on{background:#9C4436;animation:pulso 1.4s infinite}
+.ch-nota{margin:0;padding:0 14px 10px;text-align:center}
+@media (max-width:700px){
+  main:has(.ch){padding:0!important;padding-bottom:0!important}
+  .ch{height:calc(100dvh - 72px - 66px - env(safe-area-inset-bottom));border-radius:0;border:0;min-height:0}
+  .ch-m{max-width:94%}
+  .ch-topo{padding:10px 12px}
+}
 /* anexos */
 .anx-lista{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .anx{display:inline-flex;align-items:center;background:var(--calmo);border-radius:9px;max-width:100%}
@@ -849,7 +900,7 @@ function passaC(t,it){const f=ui.det,c=classe(t,it);
   if(f.fp&&(f.fp==='-'?c.p:c.p!==f.fp))return false;
   if(f.fe&&(f.fe==='-'?c.e:c.e!==f.fe))return false;return true}
 let cfg={...CFG0},dados=null,M=null,handle=null,syncEstado='manual',ultimaChecagem=null,erroSync=null;
-const ui={mais:false,com:{f:'prox',q:''},ap:{st:'todos',emp:'',empresa:'',q:''},rk:{ord:'valor',per:'mes',grupo:''},as:{texto:''},areaVer:'',areaAlvo:'',calVer:'folga',rel:{area:'',orig:'ambos',sit:'aberto',de:'',ate:'',nat:'',pri:'',etq:'',modo:'total',sep:'mes',prev:false,busca:''},totPer:'mes',totPrev:false,cfgDim:'nat',cfgBusca:'',diaAb:null,semana:null,verPassadas:false,aba:'inicio',periodo:90,mesDia:null,mesCal:null,soMov:false,det:{tipo:'r',status:'todos',busca:'',mes:'',lim:200},verAportes:false,sim:{valor:'',entrada:'',parcelas:'1',data:'',res:null}};
+const ui={mais:false,com:{f:'prox',q:''},ap:{st:'todos',emp:'',empresa:'',q:''},rk:{ord:'valor',per:'mes',grupo:''},as:{texto:'',msgs:[]},areaVer:'',areaAlvo:'',calVer:'folga',rel:{area:'',orig:'ambos',sit:'aberto',de:'',ate:'',nat:'',pri:'',etq:'',modo:'total',sep:'mes',prev:false,busca:''},totPer:'mes',totPrev:false,cfgDim:'nat',cfgBusca:'',diaAb:null,semana:null,verPassadas:false,aba:'inicio',periodo:90,mesDia:null,mesCal:null,soMov:false,det:{tipo:'r',status:'todos',busca:'',mes:'',lim:200},verAportes:false,sim:{valor:'',entrada:'',parcelas:'1',data:'',res:null}};
 const salvarCfg=()=>segSet('cfg',cfg).catch(()=>toast('Não foi possível salvar online. Confira a internet.',8000));
 
 /* ========== motor do fluxo ========== */
@@ -903,12 +954,12 @@ function montar(){
   /* semáforo de cada dia */
   const sem={};
   for(let i=idx[H];i<n;i++){
-    const x=dias[i];let r30=0;for(let d=Math.max(H,x.d-29);d<=x.d;d++){const c=mov[d];if(c)r30+=c.ep}
+    const x=dias[i];
     if(x.fim<cfg.minimo-.005){sem[x.d]={c:'r',m:'Abaixo do Caixa mínimo neste dia'};continue}
     if(fol[x.d]<=.005){let dF=null;for(let k=i+1;k<Math.min(n,i+J+1);k++)if(dias[k].fim<cfg.minimo-.005){dF=dias[k].d;break}
       sem[x.d]={c:'a',m:dF?`Vai faltar em ${fData(dF)}`:'Sem Folga de caixa'};continue}
-    if(x.fim-r30<cfg.minimo-.005){sem[x.d]={c:'a',m:'Depende de receber'};continue}
-    sem[x.d]={c:'v',m:'Paga mesmo sem receber nos últimos 30 dias'};
+    /* a cor diz só se vai ter dinheiro: verde = não falta neste dia nem nos próximos dias */
+    sem[x.d]={c:'v',m:`Não falta nos próximos ${J} dias`};
   }
   const ultDif=[...dias].reverse().find(x=>x.dif!=null&&Math.abs(x.dif)>=.01);
   const dbs=dados.meta.dataBase;const inad=atrasoR.filter(x=>!dbs||x.d<dbs),aguard=atrasoR.filter(x=>dbs&&x.d>=dbs);
@@ -918,7 +969,7 @@ const rec=()=>{cacheDesp=null;M=dados?montar():null;if(dados)setTimeout(checarAv
 const SEM={v:['Tem dinheiro','p-bom','✓'],a:['Talvez tenha','p-alerta','?'],r:['Não vai ter','p-critico','!']};
 const semDe=d=>M.sem[d]||null;
 const pontoSem=d=>{const z=semDe(d);return z?`<i class="sem-p sem-${z.c}" title="${SEM[z.c][0]}: ${esc(z.m)}">${SEM[z.c][2]}</i>`:''};
-function legendaSem(){return `<div class="leg-sem"><span><i class="sem-p sem-v">✓</i><b>Tem dinheiro</b></span><span><i class="sem-p sem-a">?</i><b>Talvez tenha</b> depende de receber ou vai faltar depois</span><span><i class="sem-p sem-r">!</i><b>Não vai ter</b> abaixo do Caixa mínimo</span></div>`}
+function legendaSem(){return `<div class="leg-sem"><span><i class="sem-p sem-v">✓</i><b>Tem dinheiro</b></span><span><i class="sem-p sem-a">?</i><b>Talvez tenha</b> tem neste dia, mas vai faltar nos dias seguintes</span><span><i class="sem-p sem-r">!</i><b>Não vai ter</b> abaixo do Caixa mínimo</span></div>`}
 function glossario(){return `<details class="card gloss"><summary>O que é cada coisa?</summary>
   <dl>
     <dt>Disponibilidade de caixa</dt><dd>Quanto vai ter na conta no fim do dia. É a coluna <b>Disponibilidade (Saldo Acum.)</b> do Excel: Saldo inicial de caixa + Recebível em Caixa − Despesas.</dd>
@@ -1103,6 +1154,7 @@ function render(){
   if(ui.aba==='areas')desenhaAreaItens();
   if(ui.aba==='comissoes')desenhaCom();
   if(ui.aba==='ranking'||ui.aba==='aportes')carregaMinis();
+  if(ui.aba==='assist'){const e=$('#chMsgs');if(e)e.scrollTop=e.scrollHeight}
 }
 /* ---------- celular: resposta do dia, barra de botões e listas ---------- */
 function heroMobile(H,hj){
@@ -1121,9 +1173,9 @@ function navMobile(){
   if(!dados||authTela)return'';
   const ic={inicio:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',semana:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',dia:'<path d="M4 6h16M4 12h16M4 18h10"/>',totais:'<path d="M5 20V10M12 20V4M19 20v-7"/>',assist:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',mais:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
   const b=(k,t,a)=>`<button class="${(a==='mais'?ui.mais:(!ui.mais&&ui.aba===k))?'on':''}" data-a="${a||'aba'}" data-v="${k}" aria-label="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[k]}</svg>${t}</button>`;
-  const outros=[['comissoes','Vendas: Comissões'],['ranking','Vendas: Ranking'],['aportes','Aportes'],...(souLeitor()?[]:[['totais','Totais']]),['datas','Melhores datas'],['areas','Despesas por Área'],['detalhes','Detalhes'],['relatorios','Relatórios']].concat(souLeitor()?[]:[['config','Configuração']]);
+  const outros=[['comissoes','Vendas: Comissões'],['ranking','Vendas: Ranking'],['aportes','Aportes'],['totais','Totais'],['datas','Melhores datas'],['areas','Despesas por Área'],['detalhes','Detalhes'],['relatorios','Relatórios']].concat(souLeitor()?[]:[['config','Configuração']]);
   const sheet=ui.mais?`<div class="fundo" data-a="mais"></div><div class="mais-m" role="menu">${outros.map(([k,t])=>`<button data-a="aba" data-v="${k}" class="${ui.aba===k?'on':''}">${t}</button>`).join('')}${souLeitor()?'':'<button data-a="anexar">Anexar planilha</button><button data-a="saldo">Informar saldo bancario</button>'}<button data-a="sair">Sair</button></div>`:'';
-  return `${sheet}<nav class="navm" aria-label="Menu">${b('inicio','Início')}${b('semana','Semana')}${souLeitor()?b('dia','Dia a dia')+b('totais','Totais'):b('assist','Falar')+b('dia','Dia a dia')}${b('mais','Mais','mais')}</nav>`;
+  return `${sheet}<nav class="navm" aria-label="Menu">${b('inicio','Início')}${b('semana','Semana')}${b('assist','Assistente')+b('dia','Dia a dia')}${b('mais','Mais','mais')}</nav>`;
 }
 /* ---------- anexos: comprovantes, prints, PDF e Excel ---------- */
 const ANEXO_MAX=10*1024*1024,ANEXO_ACEITA='image/*,application/pdf,.pdf,.xlsx,.xls,.csv';
@@ -1392,32 +1444,141 @@ function resumoAssist(r){
   const falta=r.acao==='aporte'&&!r.v?'Falta o valor.':r.acao==='venda'&&!r.vend?'Escolha o vendedor no formulário.':(r.acao==='nf'||r.acao==='pago')&&!cm?'Não achei comissão dessa unidade. Vou abrir uma nova.':'';
   return `<div class='as-res'><div class='as-res-t'><span class='pill p-saldo'>${NOMES_AS[r.acao]}</span><b>Entendi assim:</b></div><dl class='as-dl'>${it.join('')}</dl>${falta?`<p class='nota' style='margin:6px 0 0'>${falta}</p>`:''}<button class='btn forte as-ir' data-a='asAbrir'>Abrir para conferir e salvar</button><p class='nota' style='margin:8px 0 0'>Nada é salvo antes de você conferir no formulário.</p></div>`;
 }
+/* conversa: perguntas sobre o caixa e pedidos de registro */
+const ehPergunta=o=>/\?|^(quanto|quanta|quantos|quantas|quando|qual|quais|quem|como|onde|tem |vai |posso|da pra|da para|consigo|existe|estamos|estou|ta |esta )/.test(o)||/\b(me (diz|fala|mostra)|resumo|situacao|como (esta|ta)|o que (entra|sai|vence|tem))\b/.test(o);
+const Rv=v=>R(Math.round(v));
+const nDias=(a,b)=>{let e=0,s=0;for(let d=a;d<=b;d++){const m=mvz(d);e+=m.ep+m.er;s+=m.sp+m.sr}return {e,s}};
+const fimDe=d=>{const i=M.idx[d];return i!=null?M.dias[i].fim:null};
+const menorEntre=(a,b)=>{let mn=null;for(let d=a;d<=b;d++){const f=fimDe(d);if(f!=null&&(mn==null||f<mn.v))mn={d,v:f}}return mn};
+const stTxt=d=>{const z=semDe(d);return z?SEM[z.c][0]+(z.c!=='v'&&z.m?' ('+z.m.toLowerCase()+')':''):''};
+const corDe=d=>(semDe(d)||{c:'v'}).c;
+function diaFala(d,extra){
+  if(M.idx[d]==null)return {txt:'Não tenho dados para '+fData(d)+'.'};
+  const m=mvz(d),e=m.ep+m.er,s=m.sp+m.sr,f=fimDe(d),nome=d===M.H?'Hoje':d===M.H+1?'Amanhã':fDia(d);
+  const cards=[{r:'Entra',v:Rv(e),c:'entra'},{r:'Sai',v:Rv(s),c:'sai'},{r:'Fim do dia',v:Rv(f),c:corDe(d)}];if(extra)cards.push(extra);
+  return {tit:nome+' · '+SEM[corDe(d)][0],cor:corDe(d),txt:nome+': entra '+Rv(e)+', sai '+Rv(s)+' e a conta fecha o dia com '+Rv(f)+'. '+stTxt(d)+'.',cards};
+}
+function periodoFala(a,b,nome,ir){
+  const {e,s}=nDias(a,b),mn=menorEntre(a,b),f=fimDe(b),baixo=mn&&mn.v<(cfg.minimo||0);
+  let t=nome+': entra '+Rv(e)+' e sai '+Rv(s)+'.';
+  if(f!=null)t+=' Fecha com '+Rv(f)+'.';
+  if(baixo)t+=' Atenção: em '+fDia(mn.d)+' fica em '+Rv(mn.v)+', abaixo do Caixa mínimo.';
+  else if(mn)t+=' O menor saldo é '+Rv(mn.v)+' em '+fDia(mn.d)+'.';
+  const cards=[{r:'Entra',v:Rv(e),c:'entra'},{r:'Sai',v:Rv(s),c:'sai'}];if(f!=null)cards.push({r:'Fecha com',v:Rv(f),c:f<(cfg.minimo||0)?'r':'saldo'});if(mn)cards.push({r:'Menor saldo · '+fCurta(mn.d),v:Rv(mn.v),c:baixo?'r':'v'});
+  return {tit:nome,cor:baixo?'r':'v',txt:t,cards,ir};
+}
+function responder(texto){
+  const o=semAc(texto).replace(/\s+/g,' ').trim(),H=M.H,r=entender(texto);
+  /* pedido de registro (não é pergunta) */
+  if(r&&r.acao&&!ehPergunta(o)&&(r.v||r.un||r.vend||r.acao==='aporte'))return {tipo:'registro',r,tit:'Para registrar · '+NOMES_AS[r.acao],txt:fraseRegistro(r)};
+  const dtx=toD(H),ano=dtx.getUTCFullYear(),mes=dtx.getUTCMonth();
+  const val=r&&r.v;
+  if(/ajuda|o que (voce|vc) (faz|sabe)|como (te )?uso/.test(o))return {txt:'Posso responder sobre o caixa: quanto tem hoje, como está a semana ou o mês, se vai faltar dinheiro, se dá para pagar um valor, inadimplência, comissões, aportes e ranking. Também registro aportes, vendas, comissões e saldo. É só falar.'};
+  if(/inadimpl|atrasad|vencid|nao pag|em aberto/.test(o)){const n=M.inad.length;return {tit:'Inadimplência',cor:n?'a':'v',cards:[{r:'Vencido em aberto',v:Rv(M.totInad),c:n?'r':'v'},{r:'Parcelas',v:String(n),c:'saldo'},{r:'Aguardando baixa',v:Rv(M.totAguard),c:'a'}],txt:n?'Vencido em aberto: '+Rv(M.totInad)+' em '+n+' parcela(s). Aguardando baixa: '+Rv(M.totAguard)+'.':'Não há inadimplência registrada.',ir:'detalhes'}}
+  if(/comiss|gatilho|unigest|nota fiscal/.test(o)){
+    const l=comissoesCalc();if(!l.length)return {txt:'Ainda não há comissões cadastradas. Diga, por exemplo: comissão da unidade 1204 valor negociado 900 mil.',ir:'comissoes'};
+    const at=l.filter(c=>c.atrasado&&!c.tudoPago),br=l.filter(c=>c.st==='breve'&&!c.tudoPago),em=l.filter(c=>c.email!=null&&c.email>=H&&c.email-H<=6&&!c.tudoPago),nf=l.filter(c=>c.st==='ok'&&!c.tudoPago&&c.email!=null&&c.email<H);
+    const p=[];if(em.length)p.push('e-mail da Unigestão '+(em[0].email===H?'hoje':fDia(em[0].email))+' para '+em.length+' unidade(s): '+em.slice(0,3).map(c=>c.un).join(', '));if(br.length)p.push(br.length+' gatilho(s) nos próximos 7 dias');if(nf.length)p.push(nf.length+' atingido(s) esperando nota fiscal');if(at.length)p.push(at.length+' com prazo do gatilho vencido');
+    return {tit:'Comissões',cor:at.length?'a':'v',cards:[{r:'E-mail Unigestão (7 dias)',v:String(em.length),c:'saldo'},{r:'Gatilhos em 7 dias',v:String(br.length),c:br.length?'a':'v'},{r:'Esperando nota fiscal',v:String(nf.length),c:nf.length?'r':'v'},{r:'Prazo vencido',v:String(at.length),c:at.length?'a':'v'}],txt:p.length?'Comissões: '+p.join('; ')+'.':'Comissões em dia. Nada para esta semana.',ir:'comissoes'};
+  }
+  if(/ranking|vendeu mais|melhor vendedor|quem (esta|ta) (na frente|ganhando)|lider/.test(o)){
+    const per=/ano/.test(o)?'ano':/tudo|geral/.test(o)?'tudo':'mes',sv=ui.rk.per;ui.rk.per=per;const l=rankCalc().todos.filter(p=>p.valor>0).sort((a,b)=>b.valor-a.valor);ui.rk.per=sv;
+    const nome=per==='mes'?'neste mês':per==='ano'?'neste ano':'no total';
+    return {tit:'Ranking '+nome,txt:l.length?'Ranking '+nome+': '+l.slice(0,3).map((p,i)=>(i+1)+'º '+p.nome+' com '+Rv(p.valor)+' ('+p.qtd+' un.)').join(', ')+'.':'Nenhuma venda registrada '+nome+'.',lista:l.slice(0,5).map((p,i)=>[(i+1)+'º '+p.nome,Rv(p.valor)+' · '+p.qtd+' un.']),ir:'ranking'};
+  }
+  if(/aportad|aportes (feitos|registrados)|quem deve|deve a|saldo entre/.test(o)){
+    const l=cfg.aportes||[],f=l.filter(a=>a.status!=='Previsto'&&a.tipo!=='Devolução').reduce((s,a)=>s+(+a.v||0),0),pv=l.filter(a=>a.status==='Previsto').reduce((s,a)=>s+(+a.v||0),0),sal=saldoEmpresas(l);
+    return {tit:'Aportes',cards:l.length?[{r:'Aportado',v:Rv(f),c:'v'},{r:'Previsto',v:Rv(pv),c:'prev'}]:null,lista:sal.slice(0,4).map(s=>[s.devedor+' deve a '+s.credor,Rv(s.v)]),txt:l.length?'Aportado: '+Rv(f)+(pv?'; previsto: '+Rv(pv):'')+'.'+(sal.length?' '+sal.slice(0,2).map(s=>s.devedor+' deve '+Rv(s.v)+' a '+s.credor).join('; ')+'.':''):'Nenhum aporte registrado ainda.',ir:'aportes'};
+  }
+  if(/posso (pagar|gastar|comprar)|da (pra|para) pagar|consigo pagar|cabe/.test(o)&&val){
+    const fol=M.fol[H]||0;
+    if(val<=fol)return {tit:'Dá para pagar',cor:'v',cards:[{r:'Valor',v:Rv(val),c:'sai'},{r:'Folga de caixa hoje',v:Rv(fol),c:'v'}],txt:'Dá. Hoje a Folga de caixa é '+Rv(fol)+', então '+Rv(val)+' cabe sem ficar abaixo do Caixa mínimo.'};
+    let dd=null;for(let i=M.idx[H]+1;i<M.dias.length;i++){const x=M.dias[i];if((M.fol[x.d]||0)>=val){dd=x.d;break}}
+    return {tit:'Hoje não dá',cor:'a',cards:[{r:'Valor',v:Rv(val),c:'sai'},{r:'Folga de caixa hoje',v:Rv(fol),c:'a'}].concat(dd?[{r:'Primeira data possível',v:fDia(dd),c:'v'}]:[]),txt:'Hoje não: a Folga de caixa é '+Rv(fol)+'.'+(dd?' A primeira data em que '+Rv(val)+' cabe é '+fDia(dd)+'.':' Não achei data no período em que esse valor caiba.'),ir:'datas'};
+  }
+  if(/falta|faltar|aporte|negativ|vermelho|precis(a|o) de dinheiro|vai ter dinheiro/.test(o)){
+    if(!M.aportes.length)return {tit:'Tem dinheiro',cor:'v',txt:'Não vai faltar no período: sem Aporte necessário. Hoje: '+stTxt(H)+'.',cards:[{r:'Aporte necessário',v:'Nenhum',c:'v'},{r:'Hoje',v:Rv(fimDe(H)),c:corDe(H)}]};
+    const g=agrupaAportes();return {tit:'Não vai ter a partir de '+fCurta(M.aportes[0].d),cor:'r',txt:'Vai faltar a partir de '+fDia(M.aportes[0].d)+'. Aporte necessário nesse mês: '+Rv(g[0].v)+'. Acumulado no período: '+Rv(M.totAporte)+'.',cards:[{r:'Falta a partir de',v:fDia(M.aportes[0].d),c:'r'},{r:'Aporte nesse mês',v:Rv(g[0].v),c:'r'},{r:'Acumulado no período',v:Rv(M.totAporte),c:'a'}],lista:g.slice(1,4).map(x=>['até '+fData(x.d),Rv(x.v)]),ir:'inicio'};
+  }
+  if(/(o que|quem|quais).*(vence|pagar|contas|sai)|proximas contas|maiores (contas|despesas)/.test(o)){
+    const a=/semana/.test(o)?7:/mes/.test(o)?30:7,l=despTodas().filter(x=>!x.pago&&x.d>=H&&x.d<=H+a).sort((x,y)=>y.v-x.v);
+    return {tit:'Contas nos próximos '+a+' dias',txt:l.length?'Maiores contas nos próximos '+a+' dias: '+l.slice(0,3).map(x=>(x.forn||x.nat||'Conta')+' '+Rv(x.v)+' em '+fCurta(x.d)).join('; ')+'. Total: '+Rv(l.reduce((s,x)=>s+x.v,0))+'.':'Nenhuma conta a vencer nos próximos '+a+' dias.',cards:l.length?[{r:'Total a pagar',v:Rv(l.reduce((s,x)=>s+x.v,0)),c:'sai'},{r:'Contas',v:String(l.length),c:'saldo'}]:null,lista:l.slice(0,5).map(x=>[fCurta(x.d)+' · '+(x.forn||x.nat||'Conta'),Rv(x.v)]),ir:'dia'};
+  }
+  if(/(o que|quem|quais).*(entra|receb|paga pra|paga para)|vai entrar|recebimentos/.test(o)){
+    const a=/mes/.test(o)?30:7,l=dados.receb.filter(x=>x.pd==null&&x.d>=H&&x.d<=H+a).sort((x,y)=>y.v-x.v);
+    return {tit:'Recebimentos nos próximos '+a+' dias',txt:l.length?'Maiores recebimentos nos próximos '+a+' dias: '+l.slice(0,3).map(x=>(x.cli||'Cliente')+(x.un?' (un. '+x.un+')':'')+' '+Rv(x.v)+' em '+fCurta(x.d)).join('; ')+'. Total: '+Rv(l.reduce((s,x)=>s+x.v,0))+'.':'Nenhum recebimento previsto nos próximos '+a+' dias.',cards:l.length?[{r:'Total a receber',v:Rv(l.reduce((s,x)=>s+x.v,0)),c:'entra'},{r:'Parcelas',v:String(l.length),c:'saldo'}]:null,lista:l.slice(0,5).map(x=>[fCurta(x.d)+' · '+(x.cli||'Cliente')+(x.un?' · un. '+x.un:''),Rv(x.v)]),ir:'dia'};
+  }
+  if(/semana que vem|proxima semana/.test(o)){const s=segDe(H)+7;return periodoFala(s,s+6,'Semana que vem','semana')}
+  if(/semana/.test(o)){return periodoFala(H,segDe(H)+6,'Até o fim desta semana','semana')}
+  if(/mes que vem|proximo mes/.test(o)){const a=deYMD(ano,mes+1,1),b=deYMD(ano,mes+2,1)-1;return periodoFala(a,b,'Mês que vem','totais')}
+  if(/\bmes\b/.test(o)){const b=deYMD(ano,mes+1,1)-1;return periodoFala(H,b,'Até o fim do mês','totais')}
+  if(r&&r.d!=null&&r.d!==H)return {...diaFala(r.d),ir:'dia',dia:r.d};
+  if(/hoje|agora|saldo|conta|caixa|tem dinheiro|quanto (tem|temos|tenho)|disponib|folga|como (esta|ta)|resumo|situacao/.test(o)){const x=diaFala(H,{r:'Folga de caixa',v:Rv(M.fol[H]||0),c:'saldo'});return {...x,txt:x.txt+' Folga de caixa: '+Rv(M.fol[H]||0)+'.',ir:'dia',dia:H}}
+  if(r&&r.acao)return {tipo:'registro',r,tit:'Para registrar · '+NOMES_AS[r.acao],txt:fraseRegistro(r)};
+  return {txt:'Não entendi. Pergunte, por exemplo: quanto tem hoje? Vai faltar dinheiro? Como está a semana? Ou diga: aporte de 50 mil da DAJ para SPE The One.'};
+}
+function fraseRegistro(r){
+  const d=r.d!=null?(r.d===hoje()?'hoje':fData(r.d)):'';
+  if(r.acao==='aporte')return (r.previsto?'Aporte previsto':r.tipoAp)+(r.v?' de '+R2(r.v):'')+(r.de?' de '+r.de:'')+(r.para?' para '+r.para:'')+(r.emp?' ('+r.emp+')':'')+(d?', '+d:'')+'.'+(r.v?'':' Falta o valor.');
+  if(r.acao==='venda')return 'Venda'+(r.vend?' de '+r.vend:'')+(r.un?', unidade '+r.un:'')+(r.v?', '+R2(r.v):'')+(r.cli?', cliente '+r.cli:'')+(d?', '+d:'')+'.'+(r.vend?'':' Escolha o vendedor.');
+  if(r.acao==='saldo')return 'Saldo bancário'+(r.v?' de '+R2(r.v):'')+(d?' em '+d:'')+'.';
+  const cm=acharComissao(r),un=r.un?'unidade '+r.un:'unidade não reconhecida';
+  if(r.acao==='nf')return 'Nota fiscal enviada, '+un+(d?', '+d:', hoje')+'.'+(cm?'':' Não achei essa comissão: vou abrir uma nova.');
+  if(r.acao==='pago')return 'Comissão paga, '+un+(d?', '+d:', hoje')+'.'+(cm?'':' Não achei essa comissão: vou abrir uma nova.');
+  return 'Comissão, '+un+(r.v?', valor negociado '+R2(r.v):'')+'.'+(cm?' Já existe: vou abrir para editar.':'');
+}
+const vozLigada=()=>localStorage.getItem('caixa-voz')!=='off';
+function falar(t,forcar){
+  if((!forcar&&!vozLigada())||!('speechSynthesis' in window))return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t.replace(/R\$\s?/g,'').replace(/(\d)\.(\d{3})/g,'$1$2')+'');u.lang='pt-BR';u.rate=1.05;const v=speechSynthesis.getVoices().find(x=>/pt(-|_)BR/i.test(x.lang));if(v)u.voice=v;speechSynthesis.speak(u)}catch(e){}
+}
+function enviarAssist(texto){
+  texto=String(texto||'').replace(/\s+/g,' ').trim();if(!texto)return;
+  const resp=responder(texto);
+  ui.as.msgs.push({de:'eu',t:texto},{de:'app',t:resp.txt,tit:resp.tit||'',cor:resp.cor||'',cards:resp.cards||null,lista:resp.lista&&resp.lista.length?resp.lista:null,reg:resp.tipo==='registro'?texto:null,ir:resp.ir||null,dia:resp.dia??null});
+  ui.as.texto='';desenhaChat();falar(resp.txt);
+}
+function bolhas(){
+  const m=ui.as.msgs;
+  if(!m.length)return `<div class='ch-vazio'><div class='ch-av'>${MIC_SVG}</div><b>Olá! Sou o assistente do caixa.</b><p>Pergunte o que quiser sobre o fluxo de caixa ou diga o que registrar.</p><div class='ch-sug'>${['Quanto tem hoje?','Vai faltar dinheiro?','Como está a semana?','Quais contas vencem?','Como estão as comissões?'].map(x=>`<button data-a='asEx' data-v='${esc(x)}'>${esc(x)}</button>`).join('')}</div></div>`;
+  return m.map((x,i)=>x.de==='eu'?`<div class='ch-m ch-eu'><p>${esc(x.t)}</p><button class='ch-cor' data-a='asCorrigir' data-v='${i}'>Corrigir</button></div>`
+    :`<div class='ch-m ch-app ${x.cor?'ch-c-'+x.cor:''}'>${x.tit?`<div class='ch-tit'>${esc(x.tit)}</div>`:''}${x.cards?`<div class='ch-cards'>${x.cards.map(c=>`<div class='ch-card cc-${c.c}'><span>${esc(c.r)}</span><b>${esc(c.v)}</b></div>`).join('')}</div>`:''}<p>${esc(x.t)}</p>${x.lista?`<ul class='ch-lista'>${x.lista.map(([a,b])=>`<li><span>${esc(a)}</span><b>${esc(b)}</b></li>`).join('')}</ul>`:''}<div class='ch-ac'><button class='ch-ouvir' data-a='asOuvir' data-v='${i}' aria-label='Ouvir resposta'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M11 5L6 9H3v6h3l5 4zM15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13'/></svg>Ouvir</button>${x.reg||x.ir?`${x.reg&&!souLeitor()?`<button class='btn forte' data-a='asAbrir' data-v='${i}'>Conferir e salvar</button>`:''}${x.ir?`<button class='btn' data-a='asIr' data-v='${i}'>Ver na tela</button>`:''}`:''}</div></div>`).join('');
+}
 function telaAssist(){
-  const r=ui.as.texto?entender(ui.as.texto):null;
-  const ex=['Aporte de 50 mil da DAJ para SPE The One hoje','Rodrigo vendeu a unidade 1204 por 850 mil para o cliente Carlos','Comissão da unidade 1204 nota fiscal enviada hoje','Aporte previsto de 200 mil dia 20','Saldo bancário de 320 mil'];
-  return `<div class='as-box'>
-    <h2>Falar com o app</h2><p class='as-sub'>Toque no microfone e diga o que aconteceu. O app entende e abre o formulário certo, já preenchido, para você conferir.</p>
-    <button class='as-mic ${ouvindo?'on':''}' data-a='asMic' aria-label='${ouvindo?'Parar de ouvir':'Toque para falar'}'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' aria-hidden='true'><rect x='9' y='3' width='6' height='11' rx='3'/><path d='M5 11a7 7 0 0 0 14 0M12 18v3'/></svg></button>
-    <p class='as-estado'>${ouvindo?'Ouvindo… toque de novo para parar':'Toque para falar'}</p>
-    ${SR?'':`<p class='nota as-semsr'>Neste aparelho, toque na caixa abaixo e use o <b>microfone do teclado</b> para ditar.</p>`}
-    <label class='as-lab' for='asTexto'>O que foi entendido (pode corrigir)</label>
-    <textarea id='asTexto' rows='3' placeholder='Ex.: aporte de 50 mil da DAJ para SPE The One hoje'>${esc(ui.as.texto)}</textarea>
-    <div id='asRes'>${resumoAssist(r)}</div>
-    <div class='as-ex'><span class='nota'>Exemplos (toque para testar):</span>${ex.map(x=>`<button class='as-chip' data-a='asEx' data-v='${esc(x)}'>${esc(x)}</button>`).join('')}</div>
+  return `<div class='ch'>
+    <div class='ch-topo'><b>Assistente</b><span><span class='seg ch-modo'><button class='${vozLigada()?'on':''}' data-a='asVoz' data-v='on'>Ler e ouvir</button><button class='${vozLigada()?'':'on'}' data-a='asVoz' data-v='off'>Só ler</button></span>${ui.as.msgs.length?`<button class='ch-tg' data-a='asLimpar'>Limpar</button>`:''}</span></div>
+    <div class='ch-msgs' id='chMsgs'>${bolhas()}</div>
+    <form class='ch-barra' id='chForm'><input id='chIn' autocomplete='off' placeholder='${ouvindo?'Ouvindo…':'Pergunte ou diga o que registrar'}' value='${esc(ui.as.texto)}' aria-label='Mensagem'><button type='submit' class='ch-env' aria-label='Enviar'><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12h14M13 6l6 6-6 6'/></svg></button><button type='button' class='ch-mic ${ouvindo?'on':''}' data-a='asMic' aria-label='${ouvindo?'Parar':'Falar'}'>${MIC_SVG}</button></form>
+    ${SR?'':`<p class='nota ch-nota'>Para falar, toque na caixa e use o microfone do teclado.</p>`}
   </div>`;
 }
-function asMic(){
-  if(!SR){const e=$('#asTexto');if(e){e.focus();toast('Use o microfone do teclado para ditar.')}return}
-  if(ouvindo){try{ouvindo.stop()}catch(e){}return}
-  const rec=new SR();rec.lang='pt-BR';rec.interimResults=true;rec.continuous=true;rec.maxAlternatives=1;
-  const base=ui.as.texto?ui.as.texto.trim()+' ':'';let fin='';
-  rec.onresult=ev=>{let tmp='';for(let i=ev.resultIndex;i<ev.results.length;i++){const s=ev.results[i][0].transcript;if(ev.results[i].isFinal)fin+=s+' ';else tmp+=s}ui.as.texto=(base+fin+tmp).replace(/\s+/g,' ').trim();const e=$('#asTexto');if(e)e.value=ui.as.texto;const r=$('#asRes');if(r)r.innerHTML=resumoAssist(entender(ui.as.texto))};
-  rec.onerror=ev=>{toast(ev.error==='not-allowed'||ev.error==='service-not-allowed'?'Permita o uso do microfone para este site.':ev.error==='no-speech'?'Não ouvi nada. Tente de novo.':'O microfone parou. Tente de novo.')};
-  rec.onend=()=>{ouvindo=null;if(ui.aba==='assist')render()};
-  try{rec.start();ouvindo=rec;render()}catch(e){toast('Não foi possível ligar o microfone.')}
+function desenhaChat(){
+  const e=$('#chMsgs');if(!e){render();return}
+  e.innerHTML=bolhas();const i=$('#chIn');if(i){i.value=ui.as.texto;i.placeholder=ouvindo?'Ouvindo…':'Pergunte ou diga o que registrar'}
+  const mc=$('.ch-mic');if(mc)mc.classList.toggle('on',!!ouvindo);
+  e.scrollTop=e.scrollHeight;if(window.innerWidth<=700)scrollTo(0,document.body.scrollHeight);
 }
-function asAbrir(){
-  const r=entender(ui.as.texto);if(!r||!r.acao){toast('Não entendi. Corrija o texto.');return}
+function asMic(){
+  if(!SR){const e=$('#chIn');if(e){e.focus();toast('Use o microfone do teclado para ditar.')}return}
+  if(ouvindo){try{ouvindo.stop()}catch(e){}return}
+  try{speechSynthesis.cancel()}catch(e){}
+  const rec=new SR();rec.lang='pt-BR';rec.interimResults=true;rec.continuous=false;rec.maxAlternatives=1;
+  let ultimo='';
+  /* cada evento traz a frase inteira até agora: troca o texto em vez de somar (evita duplicar no Android) */
+  rec.onresult=ev=>{let t='';for(let i=0;i<ev.results.length;i++)t+=ev.results[i][0].transcript+' ';ultimo=t.replace(/\s+/g,' ').trim();const e=$('#chIn');if(e)e.value=ultimo};
+  rec.onerror=ev=>{if(ev.error==='not-allowed'||ev.error==='service-not-allowed')toast('Permita o uso do microfone para este site.');else if(ev.error==='no-speech')toast('Não ouvi nada. Toque e fale de novo.')};
+  rec.onend=()=>{ouvindo=null;const mc=$('.ch-mic');if(mc)mc.classList.remove('on');const e=$('#chIn');if(e)e.placeholder='Pergunte ou diga o que registrar';if(ultimo){ui.as.texto='';enviarAssist(dedup(ultimo))}};
+  try{rec.start();ouvindo=rec;const mc=$('.ch-mic');if(mc)mc.classList.add('on');const e=$('#chIn');if(e){e.value='';e.placeholder='Ouvindo…'}}catch(e){toast('Não foi possível ligar o microfone.')}
+}
+/* remove repetição de palavras ou trechos que alguns celulares mandam em dobro */
+function dedup(t){
+  let w=t.split(' ');
+  for(let n=Math.floor(w.length/2);n>=1;n--){for(let i=0;i+2*n<=w.length;i++){if(w.slice(i,i+n).join(' ').toLowerCase()===w.slice(i+n,i+2*n).join(' ').toLowerCase()){w.splice(i+n,n);i--}}}
+  return w.join(' ');
+}
+function asAbrir(i){
+  const msg=ui.as.msgs[+i];if(!msg||!msg.reg)return;
+  const r=entender(msg.reg);if(!r||!r.acao){toast('Não entendi. Corrija o texto.');return}
   const desc='Registrado por voz: '+r.texto;
   if(r.acao==='aporte')return dlgAporte(null,{d:r.d!=null?iso(r.d):iso(hoje()),v:r.v||'',status:r.previsto?'Previsto':'Feito',tipo:r.tipoAp,de:r.de,para:r.para,emp:r.emp||'The One',desc});
   if(r.acao==='venda')return dlgVenda(null,{d:r.d!=null?iso(r.d):iso(hoje()),v:r.v||'',vend:r.vend,un:r.un||'',cli:r.cli||''});
@@ -1427,9 +1588,9 @@ function asAbrir(){
   dlgComissao(cm.ct);
   if(r.acao==='nf'||r.acao==='pago'){
     const campo=r.acao==='nf'?'pF':'pG',dia=iso(r.d!=null?r.d:hoje());
-    let i=-1;document.querySelectorAll('[id^=pN]').forEach(inp=>{const k=+inp.id.slice(2);if(i<0&&r.vend&&temPalavra(semAc(inp.value),r.vend))i=k});
-    if(i<0)document.querySelectorAll('[id^=pN]').forEach(inp=>{const k=+inp.id.slice(2),alvo=$('#'+campo+k);if(i<0&&alvo&&!alvo.value)i=k});
-    const alvo=i>=0?$('#'+campo+i):null;
+    let k=-1;document.querySelectorAll('[id^=pN]').forEach(inp=>{const j=+inp.id.slice(2);if(k<0&&r.vend&&temPalavra(semAc(inp.value),r.vend))k=j});
+    if(k<0)document.querySelectorAll('[id^=pN]').forEach(inp=>{const j=+inp.id.slice(2),a=$('#'+campo+j);if(k<0&&a&&!a.value)k=j});
+    const alvo=k>=0?$('#'+campo+k):null;
     if(alvo){alvo.value=dia;alvo.classList.add('as-marca');alvo.scrollIntoView({block:'center'});toast('Preenchi a data. Confira e toque em Salvar.',6000)}
     else toast('Cadastre quem recebe nesta comissão e salve.',6000);
   }
@@ -1662,7 +1823,7 @@ function topo(){
   const b=(k,t)=>`<button class="aba ${ui.aba===k?'on':''}" data-a="aba" data-v="${k}">${t}</button>`;
   return `<header class="topo"><div class="topo-in">
     <div class="marca">Caixa The One</div>
-    <nav class="abas">${b('inicio','Início')}${b('semana','Planejamento Semanal')}${b('dia','Fluxo Caixa Diário')}<button class="aba ${['comissoes','ranking'].includes(ui.aba)?'on':''}" data-a="aba" data-v="comissoes">Vendas</button>${b('aportes','Aportes')}${b('totais','Totais')}<button class="aba ${ui.mais||['datas','areas','detalhes','config','relatorios'].includes(ui.aba)?'on':''}" data-a="mais">Mais ▾</button>${souLeitor()?'':`<button class="aba aba-falar ${ui.aba==='assist'?'on':''}" data-a="aba" data-v="assist">${MIC_SVG}Falar</button>`}</nav>
+    <nav class="abas">${b('inicio','Início')}${b('semana','Planejamento Semanal')}${b('dia','Fluxo Caixa Diário')}<button class="aba ${['comissoes','ranking'].includes(ui.aba)?'on':''}" data-a="aba" data-v="comissoes">Vendas</button>${b('aportes','Aportes')}${b('totais','Totais')}<button class="aba ${ui.mais||['datas','areas','detalhes','config','relatorios'].includes(ui.aba)?'on':''}" data-a="mais">Mais ▾</button><button class="aba aba-falar ${ui.aba==='assist'?'on':''}" data-a="aba" data-v="assist">${MIC_SVG}Assistente</button></nav>
     <div class="sync" id="sync"></div>
     ${souLeitor()?'':'<button class="btn forte" data-a="anexar">Anexar planilha</button>'}<button class="btn" data-a="sair">Sair</button>
 
@@ -2662,7 +2823,7 @@ function dlgLanc(){
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
   if(ui.mais&&a!=='mais'&&a!=='aba'){ui.mais=false;document.querySelectorAll('.mais-m,.fundo[data-a=mais]').forEach(x=>x.remove())}
-  if(souLeitor()&&['comEditar','comNova','apNovo','apEditar','rkVenda','rkVendaEd','rkArq','rkArqDel','rkVendedores','asAbrir','asMic','anexar','areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
+  if(souLeitor()&&['comEditar','comNova','apNovo','apEditar','rkVenda','rkVendaEd','rkArq','rkArqDel','rkVendedores','asAbrir','anexar','areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
   if(b.tagName==='INPUT')return;
   switch(a){
     case'escolher':escolher();break;
@@ -2683,8 +2844,13 @@ document.addEventListener('click',async e=>{
     case'rkArqDel':rankArqDel(v);break;
     case'rkVendedores':dlgVendedores();break;
     case'asMic':asMic();break;
-    case'asEx':ui.as.texto=v;render();break;
-    case'asAbrir':asAbrir();break;
+    case'asEx':enviarAssist(v);break;
+    case'asCorrigir':{const i=+v,m=ui.as.msgs[i];if(m){ui.as.texto=m.t;ui.as.msgs.splice(i,2);desenhaChat();const e=$('#chIn');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}break}
+    case'asOuvir':{const m=ui.as.msgs[+v];if(m)falar(m.t,true);break}
+    case'asVoz':localStorage.setItem('caixa-voz',v);if(v==='off')try{speechSynthesis.cancel()}catch(x){};render();break;
+    case'asLimpar':ui.as.msgs=[];try{speechSynthesis.cancel()}catch(x){};render();break;
+    case'asIr':{const m=ui.as.msgs[+v];if(!m)break;if(m.dia!=null){ui.aba='dia';render();abrirDia(m.dia)}else{ui.aba=m.ir;render();scrollTo(0,0)}break}
+    case'asAbrir':asAbrir(v);break;
     case'comAvisos':ativarAvisos();break;
     case'comCopiar':copiarAviso(v);break;
     case'areaInserir':ui.areaAlvo=v;$('#arqArea').click();break;
@@ -2753,7 +2919,8 @@ document.addEventListener('change',e=>{
   if(e.target.id==='fAgr'){ui.det.agr=e.target.value;desenhaDet()}
   mudouConfig(e);
 });
-document.addEventListener('input',e=>{if(e.target.id==='busca'){ui.det.busca=e.target.value;ui.det.lim=200;desenhaDet()}if(e.target.id==='comBusca'){ui.com.q=e.target.value;desenhaCom()}if(e.target.id==='asTexto'){ui.as.texto=e.target.value;const r=$('#asRes');if(r)r.innerHTML=resumoAssist(entender(ui.as.texto))}if(e.target.dataset&&e.target.dataset.ap==='q'){ui.ap.q=e.target.value;const p=e.target.selectionStart;render();const n=$('[data-ap=q]');if(n){n.focus();n.setSelectionRange(p,p)}}if(e.target.id==='relBusca'){ui.rel.busca=e.target.value;desenhaRel()}if(e.target.id==='cfgBusca'){ui.cfgBusca=e.target.value;desenhaCfg()}});
+document.addEventListener('input',e=>{if(e.target.id==='busca'){ui.det.busca=e.target.value;ui.det.lim=200;desenhaDet()}if(e.target.id==='comBusca'){ui.com.q=e.target.value;desenhaCom()}if(e.target.id==='chIn'){ui.as.texto=e.target.value}if(e.target.id==='asTexto'){ui.as.texto=e.target.value;const r=$('#asRes');if(r)r.innerHTML=resumoAssist(entender(ui.as.texto))}if(e.target.dataset&&e.target.dataset.ap==='q'){ui.ap.q=e.target.value;const p=e.target.selectionStart;render();const n=$('[data-ap=q]');if(n){n.focus();n.setSelectionRange(p,p)}}if(e.target.id==='relBusca'){ui.rel.busca=e.target.value;desenhaRel()}if(e.target.id==='cfgBusca'){ui.cfgBusca=e.target.value;desenhaCfg()}});
+document.addEventListener('submit',e=>{if(e.target.id==='chForm'){e.preventDefault();const i=$('#chIn');enviarAssist(i?i.value:'')}});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape')fecharPainel();
   if(e.key==='Enter'&&e.target.matches('tr[data-a="dia"]'))abrirDia(+e.target.dataset.v);
