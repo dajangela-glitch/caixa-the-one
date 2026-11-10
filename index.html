@@ -247,6 +247,16 @@ table.tot td,table.tot th{font-size:16px;padding:11px 14px}
   .dm-v{font-size:16px;font-weight:700;white-space:nowrap}
   #toast{bottom:calc(84px + env(safe-area-inset-bottom))!important}
 }
+.com-grade{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.com-card{background:var(--folha);border:1px solid var(--linha);border-left:5px solid var(--calmo);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.cc-ok{border-left-color:#55704F}.cc-breve{border-left-color:#C49A3C}.cc-prev{border-left-color:#44687A}
+.com-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}
+.com-top b{display:block;font-size:17px}.com-top small{display:block;color:var(--tinta3);font-size:14px}
+.com-quem{font-size:15px}
+.com-barra{height:8px;background:var(--calmo);border-radius:99px;overflow:hidden}.com-barra i{display:block;height:100%;background:var(--entra);border-radius:99px}
+.com-num{display:grid;grid-template-columns:1fr auto;gap:2px 10px;margin:0;font-size:14.5px}.com-num dt{color:var(--tinta2)}.com-num dd{margin:0;font-weight:700;text-align:right}
+.com-acoes{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+a.btn{text-decoration:none;display:inline-flex;align-items:center}
 /* Formulários */
 .campo{display:grid;gap:4px;margin-bottom:12px}
 .campo label{font-weight:600;font-size:15px}
@@ -425,7 +435,7 @@ async function lerPlanilha(buf,nome,salvoEm){
     const pd=lerData(c[colPag]);
     const u=num(c[hR.valorpago]);
     if(!pd&&u>0)aR++;
-    receb.push({id:String(c[hR.n]??r),d,v:bruto-per,bruto,per,pd,pg:u,cli:String(c[hR.cliente]||'').replace(/^\d+\s*-\s*/,''),un:c[hR.unidade]??'',parc:c[hR.sequencia]||'',tipo:c[hR.tipo]||''});
+    receb.push({id:String(c[hR.n]??r),ct:String(c[hR.contrato]??''),vc:num(c[hR.valorcontrato]),d,v:bruto-per,bruto,per,pd,pg:u,cli:String(c[hR.cliente]||'').replace(/^\d+\s*-\s*/,''),un:c[hR.unidade]??'',parc:c[hR.sequencia]||'',tipo:c[hR.tipo]||''});
   }
   /* --- despesas --- */
   const ehD=l=>{const h=l&&l[0]&&mapa(l[0].c);return h&&'datavencimento' in h&&'valorparcela' in h};
@@ -496,6 +506,7 @@ async function renovar(){
 }
 const voltaURL=()=>encodeURIComponent(location.origin+location.pathname);
 async function nuvemInicio(){
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   const l=document.createElement('link');l.rel='manifest';l.href='manifest.webmanifest';document.head.append(l);
   const hs=new URLSearchParams(location.hash.slice(1));
   if(location.hash)history.replaceState(null,'',location.pathname);
@@ -703,7 +714,7 @@ function passaC(t,it){const f=ui.det,c=classe(t,it);
   if(f.fp&&(f.fp==='-'?c.p:c.p!==f.fp))return false;
   if(f.fe&&(f.fe==='-'?c.e:c.e!==f.fe))return false;return true}
 let cfg={...CFG0},dados=null,M=null,handle=null,syncEstado='manual',ultimaChecagem=null,erroSync=null;
-const ui={mais:false,areaVer:'',areaAlvo:'',calVer:'folga',rel:{area:'',orig:'ambos',sit:'aberto',de:'',ate:'',nat:'',pri:'',etq:'',modo:'total',sep:'mes',prev:false,busca:''},totPer:'mes',totPrev:false,cfgDim:'nat',cfgBusca:'',diaAb:null,semana:null,verPassadas:false,aba:'inicio',periodo:90,mesDia:null,mesCal:null,soMov:false,det:{tipo:'r',status:'todos',busca:'',mes:'',lim:200},verAportes:false,sim:{valor:'',entrada:'',parcelas:'1',data:'',res:null}};
+const ui={mais:false,com:{f:'prox',q:''},areaVer:'',areaAlvo:'',calVer:'folga',rel:{area:'',orig:'ambos',sit:'aberto',de:'',ate:'',nat:'',pri:'',etq:'',modo:'total',sep:'mes',prev:false,busca:''},totPer:'mes',totPrev:false,cfgDim:'nat',cfgBusca:'',diaAb:null,semana:null,verPassadas:false,aba:'inicio',periodo:90,mesDia:null,mesCal:null,soMov:false,det:{tipo:'r',status:'todos',busca:'',mes:'',lim:200},verAportes:false,sim:{valor:'',entrada:'',parcelas:'1',data:'',res:null}};
 const salvarCfg=()=>segSet('cfg',cfg).catch(()=>toast('Não foi possível salvar online. Confira a internet.',8000));
 
 /* ========== motor do fluxo ========== */
@@ -768,7 +779,7 @@ function montar(){
   const dbs=dados.meta.dataBase;const inad=atrasoR.filter(x=>!dbs||x.d<dbs),aguard=atrasoR.filter(x=>dbs&&x.d>=dbs);
   return {sem,inad,aguard,totInad:inad.reduce((a,x)=>a+x.v,0),totAguard:aguard.reduce((a,x)=>a+x.v,0),H,mov,dias,idx,aportes,totAporte:cum,atrasoR,atrasoS,totAR,totAS,fol,comPrev,totPrev,ini,fim,semSaldo:!ancoras.length,ultDif};
 }
-const rec=()=>{cacheDesp=null;M=dados?montar():null};
+const rec=()=>{cacheDesp=null;M=dados?montar():null;if(dados)setTimeout(checarAvisos,1500)};
 const SEM={v:['Tem dinheiro','p-bom','✓'],a:['Talvez tenha','p-alerta','?'],r:['Não vai ter','p-critico','!']};
 const semDe=d=>M.sem[d]||null;
 const pontoSem=d=>{const z=semDe(d);return z?`<i class="sem-p sem-${z.c}" title="${SEM[z.c][0]}: ${esc(z.m)}">${SEM[z.c][2]}</i>`:''};
@@ -945,7 +956,7 @@ function render(){
   if(authTela){a.innerHTML=telaConta();return}
   if(souLeitor()&&ui.aba==='config')ui.aba='inicio';
   if(!dados){a.innerHTML=telaBoasVindas();return}
-  a.innerHTML=topo()+`<main>${pendentes&&!souLeitor()&&ui.aba!=='config'?`<div class="faixa f-alerta" style="padding:10px 15px"><div class="ic">!</div><div class="tx"><b>${pendentes} pedido(s) de acesso</b> aguardando sua liberação.</div><button class="btn" data-a="aba" data-v="config">Ver pedidos</button></div>`:''}${ui.aba==='inicio'?telaInicio():ui.aba==='semana'?telaSemana():ui.aba==='dia'?telaDia():ui.aba==='datas'?telaDatas():ui.aba==='config'?telaConfig():ui.aba==='areas'?telaAreas():ui.aba==='totais'?telaTotais():ui.aba==='relatorios'?telaRel():telaDetalhes()}</main>`+navMobile();
+  a.innerHTML=topo()+`<main>${pendentes&&!souLeitor()&&ui.aba!=='config'?`<div class="faixa f-alerta" style="padding:10px 15px"><div class="ic">!</div><div class="tx"><b>${pendentes} pedido(s) de acesso</b> aguardando sua liberação.</div><button class="btn" data-a="aba" data-v="config">Ver pedidos</button></div>`:''}${ui.aba==='inicio'?telaInicio():ui.aba==='semana'?telaSemana():ui.aba==='dia'?telaDia():ui.aba==='datas'?telaDatas():ui.aba==='config'?telaConfig():ui.aba==='comissoes'?telaComissoes():ui.aba==='areas'?telaAreas():ui.aba==='totais'?telaTotais():ui.aba==='relatorios'?telaRel():telaDetalhes()}</main>`+navMobile();
   atualizaSync();
   {const on=$('.aba.on');if(on&&on.parentElement.scrollWidth>on.parentElement.clientWidth)on.parentElement.scrollLeft=on.offsetLeft-on.parentElement.offsetLeft-20}
   if(ui.aba==='inicio')desenhaInicio();
@@ -955,6 +966,7 @@ function render(){
   if(ui.aba==='config')desenhaCfg();
   if(ui.aba==='relatorios')desenhaRel();
   if(ui.aba==='areas')desenhaAreaItens();
+  if(ui.aba==='comissoes')desenhaCom();
 }
 /* ---------- celular: resposta do dia, barra de botões e listas ---------- */
 function heroMobile(H,hj){
@@ -973,9 +985,114 @@ function navMobile(){
   if(!dados||authTela)return'';
   const ic={inicio:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',semana:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',dia:'<path d="M4 6h16M4 12h16M4 18h10"/>',totais:'<path d="M5 20V10M12 20V4M19 20v-7"/>',mais:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
   const b=(k,t,a)=>`<button class="${(a==='mais'?ui.mais:(!ui.mais&&ui.aba===k))?'on':''}" data-a="${a||'aba'}" data-v="${k}" aria-label="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[k]}</svg>${t}</button>`;
-  const outros=[['datas','Melhores datas'],['areas','Despesas por Área'],['detalhes','Detalhes'],['relatorios','Relatórios']].concat(souLeitor()?[]:[['config','Configuração']]);
+  const outros=[['comissoes','Comissões'],['datas','Melhores datas'],['areas','Despesas por Área'],['detalhes','Detalhes'],['relatorios','Relatórios']].concat(souLeitor()?[]:[['config','Configuração']]);
   const sheet=ui.mais?`<div class="fundo" data-a="mais"></div><div class="mais-m" role="menu">${outros.map(([k,t])=>`<button data-a="aba" data-v="${k}" class="${ui.aba===k?'on':''}">${t}</button>`).join('')}${souLeitor()?'':'<button data-a="anexar">Anexar planilha</button><button data-a="saldo">Informar saldo bancario</button>'}<button data-a="sair">Sair</button></div>`:'';
   return `${sheet}<nav class="navm" aria-label="Menu">${b('inicio','Início')}${b('semana','Semana')}${b('dia','Dia a dia')}${b('totais','Totais')}${b('mais','Mais','mais')}</nav>`;
+}
+/* ---------- Comissões: gatilho quando os pagamentos chegam a 10% do valor negociado ---------- */
+const NF_ST=['Aguardando gatilho','Emitir nota fiscal','Nota fiscal recebida','Comissão paga'];
+function comissoesCalc(){
+  if(!dados)return[];
+  const H=M?M.H:hoje(),reg=cfg.comissoes||{},g={};
+  for(const r of dados.receb){const k=r.ct||'';if(!k)continue;(g[k]=g[k]||[]).push(r)}
+  return Object.entries(g).map(([ct,l])=>{
+    const c=reg[ct]||{},vc=Math.max(0,...l.map(x=>x.vc||0)),pct=c.pct!=null&&c.pct!==''?+c.pct:10,alvo=vc*pct/100;
+    const pagos=l.filter(x=>x.pd!=null).sort((a,b)=>a.pd-b.pd);
+    let cum=0,data=null,st=vc>0?'nunca':'semvalor',venc=false;
+    for(const x of pagos){cum+=x.pg;if(alvo>0&&cum>=alvo-0.005){data=x.pd;st='ok';break}}
+    const pago=pagos.reduce((a,x)=>a+x.pg,0);
+    if(st==='nunca'){let c2=pago;for(const x of l.filter(x=>x.pd==null).sort((a,b)=>a.d-b.d)){if(x.d<H){venc=true;continue}c2+=x.v;if(c2>=alvo-0.005){data=x.d;st=data-H<=7?'breve':'prev';break}}}
+    const u=l[0],vcom=c.pcom?vc*(+c.pcom)/100:(+c.vcom||0);
+    return {ct,un:u.un,cli:u.cli,vc,alvo,pago,data,st,venc,canal:c.canal||'',imob:c.imob||'',resp:c.resp||'',tel:c.tel||'',email:c.email||'',pct,vcom,nf:c.nf||'',nfst:c.nfst||(st==='ok'?NF_ST[1]:NF_ST[0]),nfdata:c.nfdata||'',obs:c.obs||''};
+  }).sort((a,b)=>(a.data??9e9)-(b.data??9e9));
+}
+const comPill=c=>c.st==='ok'?`<span class="pill p-bom">✓ Gatilho atingido em ${fData(c.data)}</span>`:c.st==='breve'?`<span class="pill p-alerta">! ${c.data===M.H?'Gatilho hoje':'Gatilho em '+(c.data-M.H)+' dia(s)'}</span>`:c.st==='prev'?`<span class="pill p-neutro">Previsto para ${fData(c.data)}</span>`:c.st==='semvalor'?'<span class="pill p-neutro">Sem valor negociado</span>':'<span class="pill p-neutro">Sem data prevista</span>';
+const textoAviso=c=>`Olá${c.resp?' '+c.resp:''}! ${c.st==='ok'?'A comissão da unidade '+c.un+' atingiu o gatilho em '+fData(c.data):'A comissão da unidade '+c.un+' tem gatilho previsto para '+fData(c.data)}. Valor negociado: ${txtV(R(c.vc))}.${c.vcom?' Comissão: '+txtV(R(c.vcom))+'.':''}`;
+function avisoComissoes(){
+  if(!dados||!dados.receb.length||dados.receb[0].ct===undefined)return'';
+  const l=comissoesCalc().filter(c=>c.st==='breve');
+  if(!l.length)return'';
+  return `<div class="faixa f-alerta"><div class="ic">!</div><div class="tx"><b>${l.length} comissão(ões) com gatilho nos próximos 7 dias.</b><small>${l.slice(0,3).map(c=>`Unidade ${esc(c.un)} em ${fCurta(c.data)}${c.resp||c.imob?': avise '+esc(c.resp||c.imob):''}`).join(' · ')}</small></div><button class="btn" data-a="aba" data-v="comissoes">Ver comissões</button></div>`;
+}
+function telaComissoes(){
+  if(!dados.receb.length||dados.receb[0].ct===undefined)return `<div class="card" style="text-align:center"><h2 style="margin-bottom:8px">Comissões</h2><p>Para calcular as comissões, anexe a planilha de novo. Assim o app lê o contrato e o valor negociado de cada unidade.</p>${souLeitor()?'':'<button class="btn forte" data-a="anexar">Anexar planilha</button>'}</div>`;
+  const l=comissoesCalc(),f=ui.com.f;
+  const breve=l.filter(c=>c.st==='breve'),okSemNF=l.filter(c=>c.st==='ok'&&c.nfst!=='Comissão paga'),semImob=l.filter(c=>!c.imob&&c.vc>0);
+  const somaC=a=>a.reduce((s,c)=>s+c.vcom,0);
+  const perm=typeof Notification==='undefined'?'nao':Notification.permission;
+  const bt=(k,t)=>`<button class="${f===k?'on':''}" data-a="comFiltro" data-v="${k}">${t}</button>`;
+  return `<div class="cab"><div><h2 style="font-size:18px">Comissões</h2><p>O gatilho acontece quando os pagamentos que caíram na conta chegam a 10% do valor negociado. O aviso aparece 7 dias antes.</p></div>
+    ${perm==='granted'?'<span class="pill p-bom">✓ Avisos ligados neste aparelho</span>':perm==='nao'?'<span class="pill p-neutro">Este navegador não mostra avisos</span>':perm==='denied'?'<span class="pill p-critico">Avisos bloqueados no navegador</span>':'<button class="btn forte" data-a="comAvisos">Ativar avisos neste aparelho</button>'}</div>
+  <div class="mini-stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div><span>Gatilho nos próximos 7 dias</span><b>${breve.length}${somaC(breve)?' · '+R(somaC(breve)):''}</b></div>
+    <div><span>Gatilho atingido, comissão não paga</span><b>${okSemNF.length}${somaC(okSemNF)?' · '+R(somaC(okSemNF)):''}</b></div>
+    <div><span>Sem imobiliária definida</span><b>${semImob.length}</b></div>
+  </div>
+  <div class="cab" style="margin-bottom:10px"><div class="seg">${bt('prox','Próximos')}${bt('ok','Atingidos')}${bt('sem','Sem imobiliária')}${bt('todos','Todos')}</div>
+    <input class="busca" id="comBusca" placeholder="Buscar unidade, cliente, imobiliária ou responsável" value="${esc(ui.com.q)}" style="max-width:360px" aria-label="Buscar"></div>
+  <div id="comLista"></div>
+  <p class="nota">Com o app fechado, o aviso ainda não chega no celular bloqueado. Essa é a próxima etapa.</p>`;
+}
+function desenhaCom(){
+  const e=$('#comLista');if(!e)return;const f=ui.com.f,q=norm(ui.com.q),H=M.H;
+  let l=comissoesCalc();
+  if(f==='prox')l=l.filter(c=>(c.st==='breve')||(c.st==='prev'&&c.data-H<=30)||(c.st==='ok'&&c.nfst!=='Comissão paga')).sort((x,y)=>({breve:0,prev:1,ok:2}[x.st]-{breve:0,prev:1,ok:2}[y.st])||(x.data-y.data));
+  if(f==='ok')l=l.filter(c=>c.st==='ok');
+  if(f==='sem')l=l.filter(c=>!c.imob&&c.vc>0);
+  if(q)l=l.filter(c=>norm(c.un+c.cli+c.imob+c.resp).includes(q));
+  const leitor=souLeitor();
+  e.innerHTML=l.length?`<div class="com-grade">${l.map(c=>{const prog=c.alvo?Math.min(100,c.pago/c.alvo*100):0;return `<div class="com-card cc-${c.st}">
+    <div class="com-top"><div><b>Unidade ${esc(c.un)}</b><small>${esc(c.cli)}</small></div>${comPill(c)}</div>
+    <div class="com-quem">${c.canal?`<span class="pill p-saldo">${esc(c.canal)}</span> `:''}${c.imob?esc(c.imob):'<span style="color:var(--tinta3)">Imobiliária não definida</span>'}${c.resp?' · '+esc(c.resp):''}</div>
+    <div class="com-barra" title="Pago até agora em relação ao gatilho"><i style="width:${prog.toFixed(1)}%"></i></div>
+    <dl class="com-num"><dt>Valor negociado</dt><dd>${R(c.vc)}</dd><dt>Gatilho (${String(c.pct).replace('.',',')}%)</dt><dd>${R(c.alvo)}</dd><dt>Pago até agora</dt><dd>${R(c.pago)}</dd>${c.vcom?`<dt>Comissão</dt><dd>${R(c.vcom)}</dd>`:''}<dt>Nota fiscal</dt><dd>${esc(c.nfst)}${c.nf?' · nº '+esc(c.nf):''}</dd></dl>
+    ${c.venc&&c.st!=='ok'?'<p class="nota" style="margin:4px 0">Há parcela vencida sem baixa: se ela for paga, o gatilho pode vir antes.</p>':''}
+    <div class="com-acoes">${leitor?'':`<button class="btn mini" data-a="comEditar" data-v="${esc(c.ct)}">Editar</button>`}${c.data?`<button class="btn mini" data-a="comCopiar" data-v="${esc(c.ct)}">Copiar aviso</button>`:''}${c.data&&c.tel?`<a class="btn mini" target="_blank" rel="noopener" href="https://wa.me/${c.tel.replace(/\D/g,'').replace(/^(?!55)/,'55')}?text=${encodeURIComponent(textoAviso(c))}">WhatsApp</a>`:''}</div>
+  </div>`}).join('')}</div>`:'<p style="color:var(--tinta3)">Nenhuma comissão neste filtro.</p>';
+}
+function dlgComissao(ct){
+  const c=comissoesCalc().find(x=>x.ct===ct);if(!c)return;
+  const r=(cfg.comissoes||{})[ct]||{},d=$('#dlg');
+  const campo=(id,rot,val,tipo='text',extra='')=>`<div class="campo"><label for="${id}">${rot}</label><input id="${id}" type="${tipo}" value="${esc(val??'')}" ${extra}></div>`;
+  d.innerHTML=`<form method="dialog" id="fCom"><h2>Unidade ${esc(c.un)}</h2><p>${esc(c.cli)} · Valor negociado ${R2(c.vc)}</p>
+    <div class="campo"><label for="kCanal">Quem vendeu</label><select id="kCanal"><option value="">Escolha</option>${['Imobiliária','House'].map(o=>`<option ${r.canal===o?'selected':''}>${o}</option>`).join('')}</select></div>
+    ${campo('kImob','Nome da imobiliária (ou House)',r.imob)}
+    <div class="dupla">${campo('kResp','Responsável para avisar',r.resp)}${campo('kTel','Telefone (WhatsApp)',r.tel,'tel','inputmode="tel"')}</div>
+    ${campo('kEmail','E-mail do responsável',r.email,'email')}
+    <div class="dupla">${campo('kPct','Gatilho (% do valor negociado)',r.pct??10,'number','min="0" max="100" step="0.5"')}${campo('kPcom','Comissão (% do valor negociado)',r.pcom,'number','min="0" max="100" step="0.01"')}</div>
+    ${campo('kVcom','Ou valor fixo da comissão (R$)',r.vcom,'text','inputmode="decimal"')}
+    <div class="dupla">${campo('kNf','Nº da nota fiscal',r.nf)}<div class="campo"><label for="kNfst">Situação</label><select id="kNfst">${NF_ST.map(o=>`<option ${(r.nfst||c.nfst)===o?'selected':''}>${o}</option>`).join('')}</select></div></div>
+    ${campo('kNfdata','Data do pagamento da comissão',r.nfdata,'date')}
+    ${campo('kObs','Observação',r.obs)}
+    <div class="acoes"><button type="button" class="btn" data-a="dlgFechar">Cancelar</button><button class="btn forte" type="submit">Salvar</button></div></form>`;
+  d.showModal();
+  $('#fCom').addEventListener('submit',async()=>{
+    const v=id=>$('#'+id).value.trim(),vc=lerValor(v('kVcom'));
+    cfg.comissoes=cfg.comissoes||{};
+    cfg.comissoes[ct]={canal:v('kCanal'),imob:v('kImob'),resp:v('kResp'),tel:v('kTel'),email:v('kEmail'),pct:v('kPct')===''?10:+v('kPct'),pcom:v('kPcom')===''?'':+v('kPcom'),vcom:isNaN(vc)?'':vc,nf:v('kNf'),nfst:v('kNfst'),nfdata:v('kNfdata'),obs:v('kObs')};
+    await salvarCfg();render();toast('Comissão salva.');
+  });
+}
+async function copiarAviso(ct){
+  const c=comissoesCalc().find(x=>x.ct===ct);if(!c)return;const t=textoAviso(c);
+  try{await navigator.clipboard.writeText(t);toast('Aviso copiado. Cole no WhatsApp ou e-mail.')}catch(e){prompt('Copie o aviso:',t)}
+}
+async function ativarAvisos(){
+  if(typeof Notification==='undefined'){toast('Este navegador não mostra avisos.');return}
+  const p=await Notification.requestPermission();render();
+  if(p==='granted'){toast('Avisos ligados neste aparelho.');checarAvisos(true)}else toast('Os avisos não foram permitidos.');
+}
+async function checarAvisos(forcar){
+  if(!dados||typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  if(!dados.receb.length||dados.receb[0].ct===undefined)return;
+  let feitos={};try{feitos=JSON.parse(localStorage.getItem('caixa-avisos')||'{}')}catch(e){}
+  const novos=comissoesCalc().filter(c=>c.st==='breve'&&!feitos[c.ct+':'+c.data]);
+  for(const c of novos){
+    const titulo=`Comissão: unidade ${c.un} em ${fCurta(c.data)}`,corpo=`${c.imob||'Imobiliária não definida'}${c.resp?'. Avise '+c.resp:''} que a comissão cai em ${fData(c.data)}.`;
+    let reg=null;try{reg=navigator.serviceWorker?await navigator.serviceWorker.getRegistration():null}catch(e){}
+    try{if(reg)await reg.showNotification(titulo,{body:corpo,tag:'com-'+c.ct,icon:'icone-192.png'});else new Notification(titulo,{body:corpo,tag:'com-'+c.ct});feitos[c.ct+':'+c.data]=Date.now()}catch(e){}
+  }
+  if(novos.length)localStorage.setItem('caixa-avisos',JSON.stringify(feitos));
 }
 function telaBoasVindas(){
   if(souLeitor())return `<div class="boas"><h1>Caixa The One</h1><p style="font-size:18px;color:var(--tinta2);margin:0">Os dados ainda não foram carregados. Assim que a administradora ligar a planilha, eles aparecem aqui sozinhos.</p><p class="nota"><button class="link" data-a="sair">Sair</button></p></div>`;
@@ -1002,7 +1119,7 @@ function topo(){
   const b=(k,t)=>`<button class="aba ${ui.aba===k?'on':''}" data-a="aba" data-v="${k}">${t}</button>`;
   return `<header class="topo"><div class="topo-in">
     <div class="marca">Caixa The One</div>
-    <nav class="abas">${b('inicio','Início')}${b('semana','Planejamento Semanal')}${b('dia','Fluxo Caixa Diário')}${b('totais','Totais')}${b('datas','Melhores datas')}${b('areas','Despesas por Área')}${b('detalhes','Detalhes')}${b('relatorios','Relatórios')}${souLeitor()?'':b('config','Configuração')}</nav>
+    <nav class="abas">${b('inicio','Início')}${b('semana','Planejamento Semanal')}${b('dia','Fluxo Caixa Diário')}${b('totais','Totais')}${b('datas','Melhores datas')}${b('comissoes','Comissões')}${b('areas','Despesas por Área')}${b('detalhes','Detalhes')}${b('relatorios','Relatórios')}${souLeitor()?'':b('config','Configuração')}</nav>
     <div class="sync" id="sync"></div>
     ${souLeitor()?'':'<button class="btn forte" data-a="anexar">Anexar planilha</button>'}<button class="btn" data-a="sair">Sair</button>
 
@@ -1048,7 +1165,7 @@ function telaInicio(){
   const qt=ui.verAportes?ag.length:5;
   const listaAp=ag.length?`<ul class="lista">${ag.slice(0,qt).map(a=>`<li><button class="linha-btn" data-a="dia" data-v="${a.d}"><span class="d">até ${fData(a.d)}</span><span class="v num">${R(a.v)}</span></button></li>`).join('')}</ul>${ag.length>5?`<p class="nota"><button class="link" data-a="verAportes">${ui.verAportes?'Ver menos':`Ver todos (${ag.length} meses)`}</button></p>`:''}`:`<p style="margin:0;color:var(--tinta2)">Sem Aporte necessário.</p>`;
   const prox=[];for(let i=M.idx[H]+1;i<M.dias.length&&prox.length<6;i++){const x=M.dias[i],m=mvz(x.d);if(m.ep||m.sp||m.er||m.sr)prox.push(x)}
-  return `${heroMobile(H,hj)}${semS}${velho}${aviso}${dif}
+  return `${heroMobile(H,hj)}${avisoComissoes()}${semS}${velho}${aviso}${dif}
   <div class="fluxo">
     <button class="stat t-saldo" data-a="saldo"><div class="rot"><span class="chip" style="background:var(--saldo)"></span>Saldo inicial de caixa</div><div class="val">${R(hj.ini)}</div><div class="sub">${M.semSaldo?'Clique para informar':'Clique para corrigir'}</div></button>
     <div class="op">+</div>
@@ -2002,13 +2119,17 @@ function dlgLanc(){
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
   if(ui.mais&&a!=='mais'&&a!=='aba'){ui.mais=false;document.querySelectorAll('.mais-m,.fundo[data-a=mais]').forEach(x=>x.remove())}
-  if(souLeitor()&&['anexar','areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
+  if(souLeitor()&&['comEditar','anexar','areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
   if(b.tagName==='INPUT')return;
   switch(a){
     case'escolher':escolher();break;
     case'anexar':$('#arq').click();break;
     case'totPer':ui.totPer=v;render();break;
     case'baixarPDF':baixarPDF();break;
+    case'comFiltro':ui.com.f=v;render();break;
+    case'comEditar':dlgComissao(v);break;
+    case'comAvisos':ativarAvisos();break;
+    case'comCopiar':copiarAviso(v);break;
     case'areaInserir':ui.areaAlvo=v;$('#arqArea').click();break;
     case'areaVer':ui.areaVer=ui.areaVer===v?'':v;render();break;
     case'areaLimpar':{const a=areas.lista.find(x=>x.id===v);if(a&&confirm(`Apagar o relatório de ${a.nome} do app? O arquivo original não é alterado.`)){a.itens=[];a.arquivo='';a.salvoEm=null;a.soma=false;await salvarAreas();rec();render()}break}
@@ -2074,7 +2195,7 @@ document.addEventListener('change',e=>{
   if(e.target.id==='fAgr'){ui.det.agr=e.target.value;desenhaDet()}
   mudouConfig(e);
 });
-document.addEventListener('input',e=>{if(e.target.id==='busca'){ui.det.busca=e.target.value;ui.det.lim=200;desenhaDet()}if(e.target.id==='relBusca'){ui.rel.busca=e.target.value;desenhaRel()}if(e.target.id==='cfgBusca'){ui.cfgBusca=e.target.value;desenhaCfg()}});
+document.addEventListener('input',e=>{if(e.target.id==='busca'){ui.det.busca=e.target.value;ui.det.lim=200;desenhaDet()}if(e.target.id==='comBusca'){ui.com.q=e.target.value;desenhaCom()}if(e.target.id==='relBusca'){ui.rel.busca=e.target.value;desenhaRel()}if(e.target.id==='cfgBusca'){ui.cfgBusca=e.target.value;desenhaCfg()}});
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape')fecharPainel();
   if(e.key==='Enter'&&e.target.matches('tr[data-a="dia"]'))abrirDia(+e.target.dataset.v);
