@@ -212,6 +212,41 @@ table.tot td,table.tot th{font-size:16px;padding:11px 14px}
 .area-card{display:flex;flex-direction:column}
 .area-num{display:grid;grid-template-columns:1fr auto;gap:3px 10px;margin:4px 0;font-size:15px}
 .area-num dt{color:var(--tinta2)}.area-num dd{margin:0;font-weight:700;white-space:nowrap}
+.navm,.hero-m,.so-mob,.mais-m{display:none}
+@media (max-width:700px){
+  .abas,.topo-in>.btn{display:none!important}
+  .topo-in{flex-wrap:nowrap}
+  .marca{font-size:15px;flex:none}
+  .sync{order:0;flex:1 1 auto;margin-left:auto;font-size:12.5px;justify-content:flex-end;text-align:right}
+  main{padding-bottom:100px}
+  .so-desk{display:none!important}
+  .so-mob{display:block}
+  .navm{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--folha);border-top:1px solid var(--linha);padding:4px 2px calc(4px + env(safe-area-inset-bottom));box-shadow:0 -2px 10px rgba(36,33,30,.06)}
+  .navm button{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--tinta3);min-height:56px}
+  .navm button.on{color:var(--tinta)}
+  .navm button.on svg{stroke-width:2.6}
+  .navm svg{width:24px;height:24px}
+  .mais-m{display:flex;flex-direction:column;position:fixed;left:8px;right:8px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:41;background:var(--folha);border-radius:16px;padding:8px;box-shadow:0 8px 30px rgba(36,33,30,.25)}
+  .mais-m button{border:0;background:none;text-align:left;font-size:17px;font-weight:600;padding:14px;border-radius:10px;min-height:48px}
+  .mais-m button.on,.mais-m button:active{background:var(--calmo)}
+  .hero-m{display:block;border-radius:18px;overflow:hidden;margin-bottom:12px;color:#fff}
+  .st-v{background:#55704F}.st-a{background:#96702A}.st-r{background:#9C4436}
+  .hm-top{all:unset;box-sizing:border-box;display:flex;gap:14px;align-items:center;width:100%;padding:18px;cursor:pointer}
+  .hm-ic{flex:none;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:26px;font-weight:700}
+  .hm-tx>span{display:block}
+  .hm-t{font-size:17px;font-weight:700}
+  .hm-n{font-size:34px;font-weight:700;line-height:1.15}
+  .hm-s{font-size:14px;opacity:.92}
+  .hm-al{all:unset;box-sizing:border-box;display:block;width:100%;padding:12px 18px;background:rgba(0,0,0,.18);cursor:pointer}
+  .hm-al b{display:block;font-size:16px}
+  .hm-al span{display:block;font-size:14px;opacity:.92}
+  .dm{all:unset;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;padding:13px 14px;background:var(--folha);border:1px solid var(--linha);border-radius:12px;margin-bottom:6px;cursor:pointer}
+  .dm.hj{border:2px solid var(--tinta)}
+  .dm-d b{display:block;font-size:16px}
+  .dm-d small{display:block;color:var(--tinta3);font-size:13.5px}
+  .dm-v{font-size:16px;font-weight:700;white-space:nowrap}
+  #toast{bottom:calc(84px + env(safe-area-inset-bottom))!important}
+}
 /* Formulários */
 .campo{display:grid;gap:4px;margin-bottom:12px}
 .campo label{font-weight:600;font-size:15px}
@@ -668,7 +703,7 @@ function passaC(t,it){const f=ui.det,c=classe(t,it);
   if(f.fp&&(f.fp==='-'?c.p:c.p!==f.fp))return false;
   if(f.fe&&(f.fe==='-'?c.e:c.e!==f.fe))return false;return true}
 let cfg={...CFG0},dados=null,M=null,handle=null,syncEstado='manual',ultimaChecagem=null,erroSync=null;
-const ui={areaVer:'',areaAlvo:'',calVer:'folga',rel:{area:'',orig:'ambos',sit:'aberto',de:'',ate:'',nat:'',pri:'',etq:'',modo:'total',sep:'mes',prev:false,busca:''},totPer:'mes',totPrev:false,cfgDim:'nat',cfgBusca:'',diaAb:null,semana:null,verPassadas:false,aba:'inicio',periodo:90,mesDia:null,mesCal:null,soMov:false,det:{tipo:'r',status:'todos',busca:'',mes:'',lim:200},verAportes:false,sim:{valor:'',entrada:'',parcelas:'1',data:'',res:null}};
+const ui={mais:false,areaVer:'',areaAlvo:'',calVer:'folga',rel:{area:'',orig:'ambos',sit:'aberto',de:'',ate:'',nat:'',pri:'',etq:'',modo:'total',sep:'mes',prev:false,busca:''},totPer:'mes',totPrev:false,cfgDim:'nat',cfgBusca:'',diaAb:null,semana:null,verPassadas:false,aba:'inicio',periodo:90,mesDia:null,mesCal:null,soMov:false,det:{tipo:'r',status:'todos',busca:'',mes:'',lim:200},verAportes:false,sim:{valor:'',entrada:'',parcelas:'1',data:'',res:null}};
 const salvarCfg=()=>segSet('cfg',cfg).catch(()=>toast('Não foi possível salvar online. Confira a internet.',8000));
 
 /* ========== motor do fluxo ========== */
@@ -910,7 +945,7 @@ function render(){
   if(authTela){a.innerHTML=telaConta();return}
   if(souLeitor()&&ui.aba==='config')ui.aba='inicio';
   if(!dados){a.innerHTML=telaBoasVindas();return}
-  a.innerHTML=topo()+`<main>${pendentes&&!souLeitor()&&ui.aba!=='config'?`<div class="faixa f-alerta" style="padding:10px 15px"><div class="ic">!</div><div class="tx"><b>${pendentes} pedido(s) de acesso</b> aguardando sua liberação.</div><button class="btn" data-a="aba" data-v="config">Ver pedidos</button></div>`:''}${ui.aba==='inicio'?telaInicio():ui.aba==='semana'?telaSemana():ui.aba==='dia'?telaDia():ui.aba==='datas'?telaDatas():ui.aba==='config'?telaConfig():ui.aba==='areas'?telaAreas():ui.aba==='totais'?telaTotais():ui.aba==='relatorios'?telaRel():telaDetalhes()}</main>`;
+  a.innerHTML=topo()+`<main>${pendentes&&!souLeitor()&&ui.aba!=='config'?`<div class="faixa f-alerta" style="padding:10px 15px"><div class="ic">!</div><div class="tx"><b>${pendentes} pedido(s) de acesso</b> aguardando sua liberação.</div><button class="btn" data-a="aba" data-v="config">Ver pedidos</button></div>`:''}${ui.aba==='inicio'?telaInicio():ui.aba==='semana'?telaSemana():ui.aba==='dia'?telaDia():ui.aba==='datas'?telaDatas():ui.aba==='config'?telaConfig():ui.aba==='areas'?telaAreas():ui.aba==='totais'?telaTotais():ui.aba==='relatorios'?telaRel():telaDetalhes()}</main>`+navMobile();
   atualizaSync();
   {const on=$('.aba.on');if(on&&on.parentElement.scrollWidth>on.parentElement.clientWidth)on.parentElement.scrollLeft=on.offsetLeft-on.parentElement.offsetLeft-20}
   if(ui.aba==='inicio')desenhaInicio();
@@ -920,6 +955,27 @@ function render(){
   if(ui.aba==='config')desenhaCfg();
   if(ui.aba==='relatorios')desenhaRel();
   if(ui.aba==='areas')desenhaAreaItens();
+}
+/* ---------- celular: resposta do dia, barra de botões e listas ---------- */
+function heroMobile(H,hj){
+  const z=semDe(H)||{c:'v',m:''},p=M.aportes[0];
+  const al=p?`<button class="hm-al" data-a="dia" data-v="${p.d}"><b>! Não vai ter em ${fData(p.d)}</b><span>Aporte necessário: ${R(agrupaAportes()[0].v)}</span></button>`:`<div class="hm-al"><b>✓ Sem Aporte necessário no período</b></div>`;
+  return `<div class="hero-m st-${z.c}"><button class="hm-top" data-a="dia" data-v="${H}"><span class="hm-ic">${SEM[z.c][2]}</span><span class="hm-tx"><span class="hm-t">Hoje: ${SEM[z.c][0]}</span><span class="hm-n">${R(hj.fim)}</span><span class="hm-s">na conta no fim do dia</span></span></button>${al}</div>`;
+}
+function linhaDiaM(d){
+  const m=mvz(d),i=M.idx[d],x=i!=null?M.dias[i]:null,tem=m.ep||m.sp||m.er||m.sr;
+  if(d<M.H&&toD(d).getUTCMonth()===toD(M.H).getUTCMonth()&&toD(d).getUTCFullYear()===toD(M.H).getUTCFullYear())return'';
+  if(!tem&&d!==M.H&&!(x&&x.banco))return'';
+  const e=m.ep+m.er,s=m.sp+m.sr;
+  return `<button class="dm ${d===M.H?'hj':''}" data-a="dia" data-v="${d}"><span class="dm-d"><b>${d===M.H?'Hoje, ':fSem(d)+', '}${fCurta(d)}</b><small>${e?'Entra '+comp(e):''}${e&&s?' · ':''}${s?'Sai '+comp(s):''}${!e&&!s?'Sem movimento':''}</small></span><span class="dm-v">${d>=M.H?pontoSem(d):''}${x?R(x.fim):'–'}</span></button>`;
+}
+function navMobile(){
+  if(!dados||authTela)return'';
+  const ic={inicio:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',semana:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',dia:'<path d="M4 6h16M4 12h16M4 18h10"/>',totais:'<path d="M5 20V10M12 20V4M19 20v-7"/>',mais:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'};
+  const b=(k,t,a)=>`<button class="${(a==='mais'?ui.mais:(!ui.mais&&ui.aba===k))?'on':''}" data-a="${a||'aba'}" data-v="${k}" aria-label="${t}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[k]}</svg>${t}</button>`;
+  const outros=[['datas','Melhores datas'],['areas','Despesas por Área'],['detalhes','Detalhes'],['relatorios','Relatórios']].concat(souLeitor()?[]:[['config','Configuração']]);
+  const sheet=ui.mais?`<div class="fundo" data-a="mais"></div><div class="mais-m" role="menu">${outros.map(([k,t])=>`<button data-a="aba" data-v="${k}" class="${ui.aba===k?'on':''}">${t}</button>`).join('')}${souLeitor()?'':'<button data-a="anexar">Anexar planilha</button><button data-a="saldo">Informar saldo bancario</button>'}<button data-a="sair">Sair</button></div>`:'';
+  return `${sheet}<nav class="navm" aria-label="Menu">${b('inicio','Início')}${b('semana','Semana')}${b('dia','Dia a dia')}${b('totais','Totais')}${b('mais','Mais','mais')}</nav>`;
 }
 function telaBoasVindas(){
   if(souLeitor())return `<div class="boas"><h1>Caixa The One</h1><p style="font-size:18px;color:var(--tinta2);margin:0">Os dados ainda não foram carregados. Assim que a administradora ligar a planilha, eles aparecem aqui sozinhos.</p><p class="nota"><button class="link" data-a="sair">Sair</button></p></div>`;
@@ -977,11 +1033,11 @@ function telaInicio(){
   const cenTxt=M.comPrev?'the One despesas + Imposto, Comissão, Previsão Marketing e Obra / outras saídas (input)':'somente the One despesas';
   if(M.aportes.length){
     const p=M.aportes[0],ppr=agrupaAportes();
-    aviso=`<div class="faixa f-critico f-grande"><div class="ic">!</div><div class="tx">
+    aviso=`<div class="faixa f-critico f-grande so-desk"><div class="ic">!</div><div class="tx">
       <b>Não vai ter a partir de ${fData(p.d)}. Aporte necessário:</b> <b>${R(ppr[0].v)}</b> nesse mês.
       <small>Aporte acumulado até ${fMes(M.aportes[M.aportes.length-1].d)}: ${R(M.totAporte)}, considerando ${cenTxt}.</small></div></div>`;
   }else{
-    aviso=`<div class="faixa f-bom f-grande"><div class="ic">✓</div><div class="tx"><b>Tem dinheiro: sem Aporte necessário no período.</b>
+    aviso=`<div class="faixa f-bom f-grande so-desk"><div class="ic">✓</div><div class="tx"><b>Tem dinheiro: sem Aporte necessário no período.</b>
       <small>Considerando ${cenTxt}.</small></div></div>`;
   }
   const semS=M.semSaldo?`<div class="faixa f-alerta"><div class="ic">!</div><div class="tx"><b>Falta informar o saldo bancario.</b> Sem ele, a conta começa do zero.</div><button class="btn forte" data-a="saldo">Informar saldo bancario</button></div>`:'';
@@ -992,7 +1048,7 @@ function telaInicio(){
   const qt=ui.verAportes?ag.length:5;
   const listaAp=ag.length?`<ul class="lista">${ag.slice(0,qt).map(a=>`<li><button class="linha-btn" data-a="dia" data-v="${a.d}"><span class="d">até ${fData(a.d)}</span><span class="v num">${R(a.v)}</span></button></li>`).join('')}</ul>${ag.length>5?`<p class="nota"><button class="link" data-a="verAportes">${ui.verAportes?'Ver menos':`Ver todos (${ag.length} meses)`}</button></p>`:''}`:`<p style="margin:0;color:var(--tinta2)">Sem Aporte necessário.</p>`;
   const prox=[];for(let i=M.idx[H]+1;i<M.dias.length&&prox.length<6;i++){const x=M.dias[i],m=mvz(x.d);if(m.ep||m.sp||m.er||m.sr)prox.push(x)}
-  return `${semS}${velho}${aviso}${dif}
+  return `${heroMobile(H,hj)}${semS}${velho}${aviso}${dif}
   <div class="fluxo">
     <button class="stat t-saldo" data-a="saldo"><div class="rot"><span class="chip" style="background:var(--saldo)"></span>Saldo inicial de caixa</div><div class="val">${R(hj.ini)}</div><div class="sub">${M.semSaldo?'Clique para informar':'Clique para corrigir'}</div></button>
     <div class="op">+</div>
@@ -1021,7 +1077,7 @@ function telaInicio(){
     </div>
   </div>
   <div class="grade">
-    <div class="card"><div class="cab"><div><h2>Recebível em Caixa x Despesas por Mês</h2><p>Próximos 12 meses. Clique em um mês para abrir.</p></div>
+    <div class="card so-desk"><div class="cab"><div><h2>Recebível em Caixa x Despesas por Mês</h2><p>Próximos 12 meses. Clique em um mês para abrir.</p></div>
       <div class="leg"><span><i class="chip" style="background:var(--entra)"></i>Recebível em Caixa</span><span><i class="chip" style="background:var(--sai)"></i>Despesas</span></div></div>
       <div id="gMeses"></div></div>
     <div class="card"><h2 style="margin-bottom:8px">Próximos dias com movimento</h2>
@@ -1062,23 +1118,23 @@ function linhaDia(d){
 function telaDia(){
   if(ui.mesDia==null){const t=toD(M.H);ui.mesDia=deYMD(t.getUTCFullYear(),t.getUTCMonth(),1)}
   const t=toD(ui.mesDia),y=t.getUTCFullYear(),m=t.getUTCMonth(),fim=deYMD(y,m+1,0);
-  let ep=0,er=0,sp=0,sr=0,ls='';
-  for(let d=ui.mesDia;d<=fim;d++){const c=mvz(d);ep+=c.ep;er+=c.er;sp+=c.sp;sr+=c.sr;ls+=linhaDia(d)}
+  let ep=0,er=0,sp=0,sr=0,ls='',lm='';
+  for(let d=ui.mesDia;d<=fim;d++){const c=mvz(d);ep+=c.ep;er+=c.er;sp+=c.sp;sr+=c.sr;ls+=linhaDia(d);lm+=linhaDiaM(d)}
   const prim=M.idx[ui.mesDia]!=null?M.dias[M.idx[ui.mesDia]]:null,ult=M.idx[fim]!=null?M.dias[M.idx[fim]]:null;
   return `<div class="barra-mes">
     <button class="btn" data-a="mes" data-v="-1" aria-label="Mês anterior">‹</button>
     <h2>${fMes(ui.mesDia)}</h2>
     <button class="btn" data-a="mes" data-v="1" aria-label="Próximo mês">›</button>
     <button class="btn" data-a="mesHoje">Hoje</button>
-    <label class="check" style="margin-left:8px"><input type="checkbox" data-a="soMov" ${ui.soMov?'checked':''}> Só dias com movimento</label>
+    <label class="check so-desk" style="margin-left:8px"><input type="checkbox" data-a="soMov" ${ui.soMov?'checked':''}> Só dias com movimento</label>
   </div>
-  <div class="mini-stats">
+  <div class="mini-stats so-desk">
     <div><span><i class="chip" style="background:var(--saldo)"></i>Saldo Acumulado</span><b class="${ult&&ult.fim<0?'neg':''}" style="${ult&&ult.fim<0?'color:var(--critico)':''}">${ult?R(ult.fim):'–'}</b></div>
     <div><span><i class="chip" style="background:var(--entra)"></i>Recebível em Caixa</span><b>${R(ep)}</b></div>
     <div><span><i class="chip" style="background:var(--entra);opacity:.55"></i>Valor Pago (recebimentos)</span><b>${R(er)}</b></div>
     <div><span><i class="chip" style="background:var(--sai)"></i>Despesas · Valor Pago</span><b>${R(sp)} · ${R(sr)}</b></div>
   </div>
-  <div class="tab-wrap" style="max-height:calc(100vh - 290px)"><table>
+  <div class="so-mob">${lm||'<p class="nota">Nenhum movimento neste mês.</p>'}</div><div class="tab-wrap so-desk" style="max-height:calc(100vh - 290px)"><table>
     <thead><tr><th>Data (dia)</th><th>Saldo inicial de caixa</th><th class="grupo">Recebível em Caixa</th><th>Valor Pago</th><th class="grupo">Despesas</th><th>Valor Pago</th><th class="grupo">Saldo do Dia</th><th>Disponibilidade (Saldo Acum.)</th><th class="esq">Aporte necessário</th></tr></thead>
     <tbody>${ls||'<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--tinta3)">Nenhum movimento neste mês.</td></tr>'}</tbody></table></div>
   <div style="margin-top:10px">${legendaSem()}</div><p class="nota">Dias passados: a conta usa o Valor Pago. De hoje em diante: usa o que está previsto e ainda não teve baixa.${prim?'':' Antes do primeiro saldo bancario informado, o saldo não é calculado.'}</p>`;
@@ -1945,6 +2001,7 @@ function dlgLanc(){
 /* ---------- ações ---------- */
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
+  if(ui.mais&&a!=='mais'&&a!=='aba'){ui.mais=false;document.querySelectorAll('.mais-m,.fundo[data-a=mais]').forEach(x=>x.remove())}
   if(souLeitor()&&['anexar','areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
   if(b.tagName==='INPUT')return;
   switch(a){
@@ -1974,7 +2031,8 @@ document.addEventListener('click',async e=>{
     case'semana':ui.semana=+v;render();{const a=$('#detSem');if(a&&b.tagName==='TR')a.scrollIntoView({behavior:'smooth',block:'start'})}break;
     case'verPassadas':ui.verPassadas=!ui.verPassadas;render();break;
     case'reconectar':reconectar();break;
-    case'aba':ui.aba=v;fecharPainel();render();scrollTo(0,0);break;
+    case'aba':ui.aba=v;ui.mais=false;fecharPainel();render();scrollTo(0,0);break;
+    case'mais':ui.mais=!ui.mais;render();break;
     case'ajustes':ui.aba='config';render();break;
     case'classificar':dlgClasse(b.dataset.t,v);break;
     case'cfgDim':ui.cfgDim=v;ui.cfgBusca='';render();break;
