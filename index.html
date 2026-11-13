@@ -606,12 +606,12 @@ async function lerPlanilha(buf,nome,salvoEm){
   let fR=acha('Sheet1'),linR=fR&&lerFolha(await z.ler(fR.arq),ss);
   const ehR=l=>{const h=l&&l[0]&&mapa(l[0].c);return h&&'vencimento' in h&&'valorcorrigido' in h&&'valorpago' in h};
   if(!ehR(linR)){fR=null;for(const f of folhas){const nf=norm(f.nome);if(!/rece|carteira|clientes|extrato/.test(nf))continue;const l=lerFolha(await z.ler(f.arq),ss);if(ehR(l)){fR=f;linR=l;break}}}
-  if(!fR)throw new Error('Não encontrei a aba de recebimentos (com as colunas Vencimento, Valor Corrigido e Valor Pago).');
-  const cabR=linR[0].c,hR=mapa(cabR);
+  if(!fR)for(const f of folhas){const l=lerFolha(await z.ler(f.arq),ss);if(ehR(l)){fR=f;linR=l;break}}
+  const cabR=fR?linR[0].c:[],hR=fR?mapa(cabR):{};
   let colPag=cabR.findIndex(v=>String(v).trim()==='Data');
   if(colPag<0)colPag=hR.data;
   const receb=[];let dataBase=null,aR=0;
-  for(const {r,c} of linR.slice(1)){
+  for(const {r,c} of (fR?linR.slice(1):[])){
     const d=lerData(c[hR.vencimento]);
     if(d==null){continue}
     const bruto=num(c[hR.valorcorrigido]??c[hR.valororiginal]);
@@ -627,9 +627,10 @@ async function lerPlanilha(buf,nome,salvoEm){
   const ehD=l=>{const h=l&&l[0]&&mapa(l[0].c);return h&&'datavencimento' in h&&'valorparcela' in h};
   let fD=acha('the One despesas'),linD=fD&&lerFolha(await z.ler(fD.arq),ss);
   if(!ehD(linD)){fD=null;for(const f of folhas){if(!/despesa|pagamento/.test(norm(f.nome))||/aporte/.test(norm(f.nome)))continue;const l=lerFolha(await z.ler(f.arq),ss);if(ehD(l)){fD=f;linD=l;break}}}
-  if(!fD)throw new Error('Não encontrei a aba de despesas (“the One despesas”).');
-  const hD=mapa(linD[0].c),desp=[];let semData=[],pagoSemData=[],dataInvalida=[],ignoradas=[];
-  for(const {r,c} of linD.slice(1)){
+  if(!fD)for(const f of folhas){if(fR&&f.arq===fR.arq)continue;const l=lerFolha(await z.ler(f.arq),ss);if(ehD(l)){fD=f;linD=l;break}}
+  if(!fR&&!fD)throw new Error('Não reconheci este Excel: ele precisa ter a aba de recebimentos (Vencimento, Valor Corrigido, Valor Pago) ou a de despesas (Data Vencimento, Valor Parcela). Os dados que já estavam no app continuam salvos.');
+  const hD=fD?mapa(linD[0].c):{},desp=[];let semData=[],pagoSemData=[],dataInvalida=[],ignoradas=[];
+  for(const {r,c} of (fD?linD.slice(1):[])){
     const forn=c[hD.prestadorservico];
     const val=typeof c[hD.valorparcela]==='number'?c[hD.valorparcela]:(typeof c[hD.valortotal]==='number'?c[hD.valortotal]:0);
     const brutaD=c[hD.datavencimento];
@@ -658,7 +659,7 @@ async function lerPlanilha(buf,nome,salvoEm){
     }
   }
   return {receb,desp,prev,semData,dataInvalida,ignoradas,pagoSemData:pagoSemData.map(x=>({forn:x.forn,v:x.pg,d:x.d})),recebSemData:aR,
-    meta:{arquivo:nome,salvoEm:salvoEm||null,dataBase,importadoEm:Date.now(),abaR:fR.nome,abaD:fD.nome,abaA:fA?fA.nome:null}};
+    meta:{arquivo:nome,salvoEm:salvoEm||null,dataBase,importadoEm:Date.now(),abaR:fR?fR.nome:null,abaD:fD?fD.nome:null,abaA:fA?fA.nome:null}};
 }
 
 /* ========== armazenamento local (nada sai do computador) ========== */
@@ -720,7 +721,7 @@ async function carregarNuvem(){
   if(perfil.papel==='pendente'||perfil.papel==='bloqueado'){authTela='aguardando';render();return}
   const lin=await req('/rest/v1/caixa?id=eq.1&select=dados,cfg,areas,enviado_em');
   const r=lin&&lin[0];
-  dados=r&&r.dados||null;areas=r&&r.areas||AREAS0();cfg={...CFG0,...((r&&r.cfg)||{})};carimbo=r&&r.enviado_em;
+  dados=r&&r.dados||null;areas=r&&r.areas||AREAS0();cfg={...CFG0,...((r&&r.cfg)||{})};cfgBase=copia(cfg);carimbo=r&&r.enviado_em;
   if(perfil.papel==='admin'){const h=await dbGet('handle').catch(()=>null);if(h){handle=h;try{const p=await h.queryPermission({mode:'read'});syncEstado=p==='granted'?'auto':'perm'}catch(e){syncEstado='perm'}}}
   authTela=null;erroAuth='';avisoAuth='';rec();render();if(syncEstado==='auto')checar();contaPendentes();if(typeof Notification!=='undefined'&&Notification.permission==='granted')inscreverPush(false);
 }
@@ -731,12 +732,13 @@ async function puxarNuvem(){
     const a=await req('/rest/v1/caixa?id=eq.1&select=enviado_em');const c=a&&a[0]&&a[0].enviado_em;
     if(!c||c===carimbo)return;
     const b=(await req('/rest/v1/caixa?id=eq.1&select=dados,cfg,areas,enviado_em'))[0];
-    dados=b.dados;areas=b.areas||AREAS0();cfg={...CFG0,...(b.cfg||{})};carimbo=b.enviado_em;rec();
-    if(!$('#dlg').open&&!$('#ov'))render();else atualizaSync();
+    dados=b.dados;areas=b.areas||AREAS0();cfg={...CFG0,...(b.cfg||{})};cfgBase=copia(cfg);carimbo=b.enviado_em;rec();
+    const ocupado=$('#dlg').open||$('#ov')||ouvindo||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
+    if(!ocupado)render();else atualizaSync();
     toast('Os dados foram atualizados.');
   }catch(e){}
 }
-setInterval(puxarNuvem,30000);setInterval(contaPendentes,60000);
+setInterval(puxarNuvem,10000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)puxarNuvem()});setInterval(contaPendentes,60000);
 async function enviaNuvem(){
   const em=($('#cEmail')?$('#cEmail').value:'').trim().toLowerCase(),se=$('#cSenha')?$('#cSenha').value:'';erroAuth='';avisoAuth='';
   const t=authTela;
@@ -805,12 +807,33 @@ async function derivar(senha,salt){
 }
 async function cifrar(v,k=chave){const iv=crypto.getRandomValues(new Uint8Array(12));return{cifrado:1,iv,ct:await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(JSON.stringify(v)))}}
 async function decifrar(r,k=chave){return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:r.iv},k,r.ct)))}
-const segSet=async(k,v)=>{
+/* duas administradoras ao mesmo tempo: ao salvar, junta as mudanças de cada uma em vez de sobrescrever */
+let cfgBase=null;
+const copia=x=>JSON.parse(JSON.stringify(x==null?null:x));
+function juntaCfg(b,l,s){
+  const out={...s},J=x=>JSON.stringify(x===undefined?null:x);
+  for(const k of new Set([...Object.keys(l),...Object.keys(b)])){
+    const bv=b[k],lv=l[k],sv=s[k];
+    if(J(lv)===J(bv))continue;
+    if(Array.isArray(lv)&&lv.every(x=>x&&x.id!=null)&&(sv==null||Array.isArray(sv))){
+      const bi=new Map((bv||[]).map(x=>[x.id,x])),li=new Map(lv.map(x=>[x.id,x])),res=new Map((sv||[]).map(x=>[x.id,x]));
+      for(const [id,x] of li)if(J(x)!==J(bi.get(id)))res.set(id,x);
+      for(const id of bi.keys())if(!li.has(id))res.delete(id);
+      out[k]=[...res.values()];
+    }else if(lv&&typeof lv==='object'&&!Array.isArray(lv)&&(sv==null||(typeof sv==='object'&&!Array.isArray(sv)))){
+      const o={...(sv||{})},bb=bv||{};
+      for(const kk of new Set([...Object.keys(lv),...Object.keys(bb)])){if(J(lv[kk])===J(bb[kk]))continue;if(lv[kk]===undefined)delete o[kk];else o[kk]=lv[kk]}
+      out[k]=o;
+    }else out[k]=lv;
+  }
+  return out;
+}const segSet=async(k,v)=>{
   if(emNuvem()){
     if(souLeitor())return;
+    if(k==='cfg'&&cfgBase){try{const a=await req('/rest/v1/caixa?id=eq.1&select=cfg,enviado_em');const sv=a&&a[0];if(sv&&sv.enviado_em!==carimbo){v=juntaCfg(cfgBase,copia(v),sv.cfg||{});cfg={...CFG0,...v}}}catch(e){}}
     const r=await req('/rest/v1/caixa?id=eq.1&select=enviado_em',{metodo:'PATCH',corpo:{[k]:v},prefer:'return=representation'});
     if(!r||!r[0])throw new Error('Sem permissão para salvar.');
-    carimbo=r[0].enviado_em;return;
+    carimbo=r[0].enviado_em;if(k==='cfg')cfgBase=copia(v);return;
   }
   return dbSet(k,chave?await cifrar(v):v);
 };
@@ -994,11 +1017,16 @@ function resumoDif(a,b){
   const p=[];if(novosR)p.push(`${novosR} recebimento(s) com baixa`);if(novasD)p.push(`${novasD} parcela(s) nova(s) em the One despesas`);if(pagasD)p.push(`${pagasD} parcela(s) paga(s)`);
   return p.length?'Planilha atualizada: '+p.join(', ')+'.':'Planilha atualizada. Nenhuma baixa nova.';
 }
-async function importar(buf,nome,salvoEm){
+/* começa sem planilha: Vendas, Aportes, Comissões e Assistente funcionam; o Excel pode vir depois */
+async function comecarVazio(){
+  const v={receb:[],desp:[],prev:[],semData:[],dataInvalida:[],ignoradas:[],pagoSemData:[],recebSemData:0,meta:{arquivo:'',salvoEm:null,dataBase:null,importadoEm:Date.now(),abaR:null,abaD:null,abaA:null,vazio:true}};
+  dados=v;try{await segSet('dados',v)}catch(e){toast('Não foi possível salvar agora: '+e.message)}
+  rec();ui.aba='comissoes';render();toast('Pronto. Quando quiser, anexe o Excel em Anexar planilha.');
+}async function importar(buf,nome,salvoEm){
   const novo=await lerPlanilha(buf,nome,salvoEm);
   const antigo=dados;dados=novo;
   await segSet('dados',novo);rec();render();
-  toast(resumoDif(antigo,novo));
+  toast(resumoDif(antigo,novo)+(novo.meta.abaR?'':' Este Excel não tem a aba de recebimentos: usei só as despesas.')+(novo.meta.abaD?'':' Este Excel não tem a aba de despesas: usei só os recebimentos.'),9000);
   if(!antigo&&!cfg.saldos.length)dlgSaldo(true);
 }
 async function escolher(){
@@ -1691,7 +1719,7 @@ function semanaCom(l){
   <p class='nota' style='margin:8px 0 0'>Próxima segunda (${fCurta(pr)}): ${emPr.length?emPr.length+' unidade(s) no e-mail da Unigestão':'nenhuma unidade prevista'}. <b>Regra:</b> nota fiscal na segunda, recebe na quarta. Na terça ou quarta, recebe na sexta. Depois de quarta, recebe na quarta seguinte.</p></div>`;
 }
 function telaComissoes(){
-  const H=M.H,l=comissoesCalc(),f=ui.com.f,seg=segDe(H),leitor=souLeitor(),semCt=!dados.receb.length||dados.receb[0].ct===undefined;
+  const H=M.H,l=comissoesCalc(),f=ui.com.f,seg=segDe(H),leitor=souLeitor(),semCt=dados.receb.length>0&&dados.receb[0].ct===undefined;
   const botoes=leitor?'':`<div class='com-bt'><button class='btn forte' data-a='comNova'>+ Nova comissão</button><button class='btn' data-a='anexar'>Anexar planilha</button></div>`;
   if(!l.length)return subVendas()+`<div class='card com-vazio'><h2 style='margin-bottom:8px'>Comissões</h2><p>Crie as comissões aqui mesmo, sem planilha: unidade, cliente, valor negociado, parcelas pagas e quem recebe. O app calcula o gatilho, o e-mail da Unigestão e o dia do pagamento.</p>${leitor?'<p>Ainda não há comissões cadastradas.</p>':botoes}<p class='nota' style='margin:12px 0 0'>Se preferir, anexe a planilha <b>Fluxo de recebimento</b> e o app lê o contrato e o valor negociado de cada unidade sozinho.</p></div>`;
   const atr=l.filter(c=>c.atrasado&&!c.tudoPago),breve=l.filter(c=>c.st==='breve'&&!c.tudoPago),faltaNF=l.filter(c=>c.st==='ok'&&!c.tudoPago&&c.email!=null&&c.email<H);
@@ -1831,7 +1859,7 @@ function telaBoasVindas(){
   <p style="font-size:18px;color:var(--tinta2);margin:0">Anexe a planilha para ver os dados. Para atualizar depois, é só anexar a versão nova.</p>
   <div class="solta">
     <button class="btn forte" data-a="anexar">Anexar a planilha</button>
-    <p style="margin:14px 0 0;color:var(--tinta2)">Escolha o arquivo <b>Fluxo de recebimento</b> em .xlsx, ou arraste para esta janela</p><p class="nota"><button class="link" data-a="escolher">Ligar a um arquivo sincronizado para atualizar sozinho</button></p>
+    <p style="margin:14px 0 0;color:var(--tinta2)">Escolha o arquivo <b>Fluxo de recebimento</b> em .xlsx, ou arraste para esta janela</p><p class="nota"><button class="link" data-a="escolher">Ligar a um arquivo sincronizado para atualizar sozinho</button></p><p class="nota" style="margin-top:10px"><button class="link" data-a="vazio">Começar sem planilha</button>: use Vendas, Aportes, Comissões e o Assistente agora e anexe o Excel quando quiser.</p>
   </div>
   <p class="nota">Os dados da planilha são guardados no banco online do app, com acesso só para quem você liberar. <button class="link" data-a="sair">Sair</button></p>
 </div>`;
@@ -1840,7 +1868,7 @@ function telaBoasVindas(){
   <p style="font-size:18px;color:var(--tinta2);margin:0">Veja, em poucos segundos, quanto tem hoje, o que entra, o que sai e quando vai faltar dinheiro.</p>
   <div class="solta">
     <button class="btn forte" data-a="anexar">Anexar a planilha</button>
-    <p style="margin:14px 0 0;color:var(--tinta2)">ou arraste o arquivo <b>Fluxo de recebimento</b> para esta janela</p>
+    <p style="margin:14px 0 0;color:var(--tinta2)">ou arraste o arquivo <b>Fluxo de recebimento</b> para esta janela</p><p class="nota" style="margin-top:10px"><button class="link" data-a="vazio">Começar sem planilha</button>: use Vendas, Aportes, Comissões e o Assistente agora e anexe o Excel quando quiser.</p>
   </div>
   <p class="nota">Seus dados ficam só neste computador. Nada é enviado para a internet.</p>
 </div>`;
@@ -2849,7 +2877,7 @@ function dlgLanc(){
 document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,v=b.dataset.v;
   if(ui.mais&&a!=='mais'&&a!=='aba'){ui.mais=false;document.querySelectorAll('.mais-m,.fundo[data-a=mais]').forEach(x=>x.remove())}
-  if(souLeitor()&&['comEditar','comNova','apNovo','apEditar','rkVenda','rkVendaEd','rkArq','rkArqDel','rkVendedores','asAbrir','anexar','areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
+  if(souLeitor()&&['vazio','comEditar','comNova','apNovo','apEditar','rkVenda','rkVendaEd','rkArq','rkArqDel','rkVendedores','asAbrir','anexar','areaInserir','areaLimpar','areaNova','areaDel','areaNome','saldo','escolher','novoLanc','delLanc','classificar','salvarSim','etqCor','etqNova','etqDel','limparRegras','delSaldo'].includes(a)){toast('Só a administradora pode alterar isso.');return}
   if(b.tagName==='INPUT')return;
   switch(a){
     case'escolher':escolher();break;
@@ -2870,6 +2898,7 @@ document.addEventListener('click',async e=>{
     case'rkArqDel':rankArqDel(v);break;
     case'rkVendedores':dlgVendedores();break;
     case'asMic':asMic();break;
+    case'vazio':comecarVazio();break;
     case'asEx':enviarAssist(v);break;
     case'asCorrigir':{const i=+v,m=ui.as.msgs[i];if(m){ui.as.texto=m.t;ui.as.msgs.splice(i,2);desenhaChat();const e=$('#chIn');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}break}
     case'asOuvir':{const m=ui.as.msgs[+v];if(m)falar(m.t,true);break}
